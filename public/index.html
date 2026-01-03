@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <title>CV Scorer</title>
 <style>
-  body { font-family: Arial; max-width: 1000px; margin: 40px auto; }
-  label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-  button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-  th { background: #f3f3f3; }
-  td.skill { font-size: 18px; }
-  td.summary { text-align: left; }
+body { font-family: Arial; max-width: 1000px; margin: 40px auto; }
+label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background: #f3f3f3; }
+td.skill { font-size: 18px; }
+td.summary { text-align: left; }
 </style>
 </head>
 <body>
@@ -39,7 +39,7 @@ submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
   const cvInput = document.getElementById("cvFiles");
   const skillsText = document.getElementById("skills").value;
-  const skills = skillsText.split(",").map(s => s.trim()).filter(Boolean);
+  const skills = skillsText.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 
   if (!skills.length) return alert("Enter at least one skill.");
   if (!jdInput.files.length) return alert("Please upload a Job Description.");
@@ -47,9 +47,7 @@ submitBtn.addEventListener("click", async () => {
 
   const formData = new FormData();
   formData.append("jdFile", jdInput.files[0]);
-  for (const file of cvInput.files) {
-    formData.append("cvFiles", file);
-  }
+  for (const file of cvInput.files) formData.append("cvFiles", file);
   formData.append("skills", skills.join(","));
 
   resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
@@ -58,29 +56,22 @@ submitBtn.addEventListener("click", async () => {
     const response = await fetch("/upload", { method: "POST", body: formData });
     const data = await response.json();
 
-    if (!data.results) {
-      resultDiv.innerHTML = "<p>No results returned</p>";
-      return;
-    }
+    if (!data.results) { resultDiv.innerHTML = "<p>No results returned</p>"; return; }
 
-    // Generate table headers
     let tableHTML = "<table><tr><th>Candidate</th><th>JD Match</th>";
-    skills.forEach(skill => {
-      tableHTML += `<th>${skill}</th>`;
-    });
+    skills.forEach(skill => tableHTML += `<th>${skill}</th>`);
     tableHTML += "<th>Summary</th></tr>";
 
-    // Fill table rows
     data.results.forEach(cv => {
-      tableHTML += `<tr>`;
+      tableHTML += "<tr>";
       tableHTML += `<td>${cv.filename}</td>`;
       tableHTML += `<td>${cv.jdMatchScore}/5</td>`;
       skills.forEach(skill => {
-        const skillObj = cv.skills.find(s => s.skill.toLowerCase() === skill.toLowerCase());
+        const skillObj = cv.skills.find(s => s.skill === skill);
         tableHTML += `<td class="skill">${skillObj?.score ? "✅" : "❌"}</td>`;
       });
       tableHTML += `<td class="summary">${cv.summary}</td>`;
-      tableHTML += `</tr>`;
+      tableHTML += "</tr>";
     });
 
     tableHTML += "</table>";
@@ -95,6 +86,8 @@ submitBtn.addEventListener("click", async () => {
 
 </body>
 </html>
+
+
 
 
 
