@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <title>CV Scorer</title>
 <style>
-body { font-family: Arial; max-width: 900px; margin: 40px auto; background:#f7f7f8; }
-label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; background:#f7f7f8; }
+label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; font-size: 14px; }
 button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
 .card { background:white; padding:20px; margin:15px 0; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
 .skill-chip { display:inline-block; padding:4px 8px; margin:2px; border-radius:12px; font-size:14px; color:white; }
 .skill-yes { background:#10b981; } /* green */
 .skill-no { background:#ef4444; } /* red */
-.progress-bar { height:12px; border-radius:6px; background:#e5e7eb; margin:5px 0; }
-.progress-fill { height:12px; border-radius:6px; background:#2563eb; }
+.progress-bar { height:14px; border-radius:6px; background:#e5e7eb; margin:5px 0; }
+.progress-fill { height:14px; border-radius:6px; background:#2563eb; }
 button.export { margin-top:10px; background:#10b981; }
 </style>
 </head>
@@ -65,26 +65,37 @@ submitBtn.addEventListener("click", async () => {
 
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
+    // Sort candidates by JD match descending
+    const sortedResults = data.results.sort((a,b) => b.jdMatchScore - a.jdMatchScore);
+
     resultDiv.innerHTML = "";
-    data.results.forEach(cv => {
+    sortedResults.forEach((cv,index)=>{
       const card = document.createElement("div");
       card.className = "card";
 
-      // Candidate Name
-      card.innerHTML += `<h2>${cv.filename}</h2>`;
+      // Candidate Name + badge
+      let badge = "";
+      if(index === 0) badge = " 🏆";
+      else if(index === 1) badge = " 🥈";
+      else if(index === 2) badge = " 🥉";
+      card.innerHTML += `<h2>${cv.filename}${badge}</h2>`;
 
       // JD Match
       const percent = (cv.jdMatchScore/5)*100;
       card.innerHTML += `<div>JD Match: ${cv.jdMatchScore}/5</div>`;
       card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
 
-      // Skills chips
+      // Top 10 skills
+      const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
+      const topSkills = sortedSkills.slice(0,10);
       let skillsHTML = "";
-      data.allSkills.forEach(skill => {
-        const sObj = cv.skills.find(s => s.skill===skill);
-        const cls = sObj?.score ? "skill-yes":"skill-no";
-        skillsHTML += `<span class="skill-chip ${cls}">${skill}</span>`;
+      topSkills.forEach(skill => {
+        const cls = skill.score ? "skill-yes" : "skill-no";
+        skillsHTML += `<span class="skill-chip ${cls}">${skill.skill}</span>`;
       });
+      if(sortedSkills.length > 10){
+        skillsHTML += `<span style="margin-left:5px; font-size:12px; color:#6b7280">+${sortedSkills.length-10} more</span>`;
+      }
       card.innerHTML += `<div style="margin-top:10px">${skillsHTML}</div>`;
 
       // Summary
@@ -128,13 +139,17 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  lastResults.results.forEach((cv,i)=>{
+
+  // Sort candidates by JD match descending for PDF too
+  const sortedResults = lastResults.results.sort((a,b)=>b.jdMatchScore - a.jdMatchScore);
+
+  sortedResults.forEach((cv,i)=>{
     if(i>0) doc.addPage();
     doc.setFontSize(16);
     doc.text(cv.filename,14,20);
     doc.setFontSize(12);
     doc.text(`JD Match: ${cv.jdMatchScore}/5`,14,28);
-    // Skills
+    // Skills table with all skills
     const skillsTable = lastResults.allSkills.map(skill=>{
       const sObj=cv.skills.find(s=>s.skill===skill);
       return [skill,sObj?.score?"✅":"❌"];
@@ -148,13 +163,12 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
     doc.text("Summary:",14,36+skillsTable.length*10+4);
     doc.text(cv.summary,14,36+skillsTable.length*10+10);
   });
+
   doc.save("cv_scores.pdf");
 });
 </script>
-
 </body>
 </html>
-
 
 
 
