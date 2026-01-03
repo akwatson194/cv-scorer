@@ -1,11 +1,9 @@
 {
   "name": "cv-scorer",
   "version": "1.0.0",
-  "description": "OpenAI CV Scorer using Node.js v4+",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js"
-  },
+  "description": "CV scorer with OpenAI and front-end",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.18.2",
     "dotenv": "^16.3.1",
