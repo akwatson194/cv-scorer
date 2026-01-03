@@ -1,84 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CV Scorer</title>
+  <meta charset="UTF-8" />
+  <title>CV Skill Scorer</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; }
-    textarea, input { width: 100%; padding: 8px; margin-bottom: 10px; }
-    button { padding: 10px 20px; cursor: pointer; }
-    .skill { display: inline-block; padding: 4px 8px; margin: 2px; border-radius: 4px; }
-    .score-1 { background-color: #c8e6c9; } /* green */
-    .score-0 { background-color: #ffcdd2; } /* red */
-    #results { margin-top: 10px; min-height: 50px; }
-    #summary { font-weight: bold; margin-bottom: 10px; }
+    body { font-family: Arial; max-width: 700px; margin: 40px auto; }
+    textarea, input, button { width: 100%; margin: 10px 0; padding: 10px; }
+    button { background: #2563eb; color: white; border: none; cursor: pointer; }
+    .result { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>CV Scorer</h1>
 
-  <label>Enter CV text:</label>
-  <textarea id="cv" rows="6" placeholder="Paste your CV here"></textarea>
+  <h1>CV Skill Scorer</h1>
 
-  <label>Enter skills (comma separated):</label>
-  <input type="text" id="skills" placeholder="Excel, Power BI, Python">
+  <label>Upload CV (PDF)</label>
+  <input type="file" id="cvFile" accept="application/pdf" />
+
+  <label>Skills (comma separated)</label>
+  <textarea id="skills" placeholder="Excel, Power BI, SQL"></textarea>
 
   <button id="submitBtn">Score CV</button>
 
-  <div id="summary"></div>
-  <div id="results">Waiting for input...</div>
+  <div class="result" id="result"></div>
 
   <script>
-    const submitBtn = document.getElementById('submitBtn');
-    const resultsEl = document.getElementById('results');
-    const summaryEl = document.getElementById('summary');
+    const submitBtn = document.getElementById("submitBtn");
+    const resultDiv = document.getElementById("result");
 
-    submitBtn.addEventListener('click', async () => {
-      const cvText = document.getElementById('cv').value;
-      const skillsText = document.getElementById('skills').value;
-      const skills = skillsText.split(',').map(s => s.trim()).filter(Boolean);
+    submitBtn.addEventListener("click", async () => {
+      const fileInput = document.getElementById("cvFile");
+      const skillsText = document.getElementById("skills").value;
+      const skills = skillsText.split(",").map(s => s.trim()).filter(Boolean);
 
-      if (!cvText || skills.length === 0) {
-        alert("Please enter CV text and at least one skill.");
+      if (!skills.length) {
+        alert("Please enter at least one skill");
         return;
       }
 
-      resultsEl.textContent = "Scoring...";
-      summaryEl.textContent = "";
+      if (!fileInput.files.length) {
+        alert("Please upload a PDF CV");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("cvFile", fileInput.files[0]);
+      formData.append("skills", skills.join(","));
+
+      resultDiv.innerHTML = "Scoring CV…";
 
       try {
-        const response = await fetch("/score", {
+        const response = await fetch("/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cv: cvText, skills })
+          body: formData
         });
-
-        if (!response.ok) {
-          resultsEl.textContent = "Error scoring CV";
-          return;
-        }
 
         const data = await response.json();
-        resultsEl.innerHTML = "";
 
-        // Count matched skills
-        const matched = data.scores.filter(s => s.score === 1).length;
-        summaryEl.textContent = `Skills matched: ${matched} / ${data.scores.length}`;
-
-        // Display each skill with colored indicator
-        data.scores.forEach(item => {
-          const span = document.createElement("span");
-          span.textContent = `${item.skill}: ${item.score}`;
-          span.className = `skill score-${item.score}`;
-          resultsEl.appendChild(span);
-        });
+        resultDiv.innerHTML = "<h3>Results</h3>" +
+          data.scores.map(s =>
+            `<p>${s.skill}: ${s.score ? "✅" : "❌"}</p>`
+          ).join("");
 
       } catch (err) {
-        resultsEl.textContent = "Error: " + err.message;
+        resultDiv.innerHTML = "Error scoring CV";
+        console.error(err);
       }
     });
   </script>
+
 </body>
 </html>
+
+
 
 
