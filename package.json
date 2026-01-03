@@ -1,7 +1,7 @@
 {
   "name": "cv-scorer",
   "version": "1.0.0",
-  "description": "CV scoring app using OpenAI",
+  "description": "OpenAI CV Scorer using Node.js v4+",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
