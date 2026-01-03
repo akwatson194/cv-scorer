@@ -4,36 +4,39 @@
 <meta charset="UTF-8">
 <title>CV Scorer</title>
 <style>
-body { font-family: Arial; max-width: 1000px; margin: 40px auto; }
+body { font-family: Arial; max-width: 900px; margin: 40px auto; background:#f7f7f8; }
 label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
 button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-th { background: #f3f3f3; }
-td.skill { font-size: 18px; }
-td.summary { text-align: left; }
-button.export { margin-top: 20px; background: #10b981; }
+.card { background:white; padding:20px; margin:15px 0; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+.skill-chip { display:inline-block; padding:4px 8px; margin:2px; border-radius:12px; font-size:14px; color:white; }
+.skill-yes { background:#10b981; } /* green */
+.skill-no { background:#ef4444; } /* red */
+.progress-bar { height:12px; border-radius:6px; background:#e5e7eb; margin:5px 0; }
+.progress-fill { height:12px; border-radius:6px; background:#2563eb; }
+button.export { margin-top:10px; background:#10b981; }
 </style>
 </head>
 <body>
 
-<h1>CV Skill & Job Match Scorer</h1>
+<h1>CV Scorer</h1>
 
-<label>Upload Job Description (PDF or Word)</label>
-<input type="file" id="jdFile" accept=".pdf,.doc,.docx" />
+<label>Job Description (PDF/Word)</label>
+<input type="file" id="jdFile" accept=".pdf,.doc,.docx">
 
-<label>Upload CVs (PDF or Word, multiple allowed)</label>
-<input type="file" id="cvFiles" accept=".pdf,.doc,.docx" multiple />
+<label>CVs (PDF/Word, multiple)</label>
+<input type="file" id="cvFiles" accept=".pdf,.doc,.docx" multiple>
 
-<label>Skills (comma separated)</label>
-<textarea id="skills" placeholder="Excel, Power BI, SQL"></textarea>
+<label>Skills (optional)</label>
+<textarea id="skills" placeholder="Excel, SQL, Power BI"></textarea>
 
 <button id="submitBtn">Score CVs</button>
 <div id="result"></div>
 
 <button class="export" id="exportCSV">Export CSV</button>
+<button class="export" id="exportPDF">Export PDF</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
 const submitBtn = document.getElementById("submitBtn");
 const resultDiv = document.getElementById("result");
@@ -43,9 +46,8 @@ submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
   const cvInput = document.getElementById("cvFiles");
   const skillsText = document.getElementById("skills").value;
-  const skills = skillsText.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+  let skills = skillsText.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 
-  if (!skills.length) return alert("Enter at least one skill.");
   if (!jdInput.files.length) return alert("Please upload a Job Description.");
   if (!cvInput.files.length) return alert("Please upload at least one CV.");
 
@@ -57,69 +59,96 @@ submitBtn.addEventListener("click", async () => {
   resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
 
   try {
-    const response = await fetch("/upload", { method: "POST", body: formData });
-    const data = await response.json();
+    const resp = await fetch("/upload", { method: "POST", body: formData });
+    const data = await resp.json();
     lastResults = data;
 
-    if (!data.results) { resultDiv.innerHTML = "<p>No results returned</p>"; return; }
+    if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
-    let tableHTML = "<table><tr><th>Candidate</th><th>JD Match</th>";
-    data.allSkills.forEach(skill => tableHTML += `<th>${skill}</th>`);
-    tableHTML += "<th>Summary</th></tr>";
-
+    resultDiv.innerHTML = "";
     data.results.forEach(cv => {
-      // Colour code row based on JD match
-      let bgColor = "#fff";
-      if (cv.jdMatchScore >= 4) bgColor = "#c6f6d5";
-      else if (cv.jdMatchScore >= 2) bgColor = "#fefcbf";
-      else bgColor = "#fed7d7";
+      const card = document.createElement("div");
+      card.className = "card";
 
-      tableHTML += `<tr style="background-color:${bgColor}">`;
-      tableHTML += `<td>${cv.filename}</td>`;
-      tableHTML += `<td>${cv.jdMatchScore}/5</td>`;
+      // Candidate Name
+      card.innerHTML += `<h2>${cv.filename}</h2>`;
+
+      // JD Match
+      const percent = (cv.jdMatchScore/5)*100;
+      card.innerHTML += `<div>JD Match: ${cv.jdMatchScore}/5</div>`;
+      card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
+
+      // Skills chips
+      let skillsHTML = "";
       data.allSkills.forEach(skill => {
-        const skillObj = cv.skills.find(s => s.skill === skill);
-        tableHTML += `<td class="skill">${skillObj?.score ? "✅" : "❌"}</td>`;
+        const sObj = cv.skills.find(s => s.skill===skill);
+        const cls = sObj?.score ? "skill-yes":"skill-no";
+        skillsHTML += `<span class="skill-chip ${cls}">${skill}</span>`;
       });
-      tableHTML += `<td class="summary">${cv.summary}</td>`;
-      tableHTML += "</tr>";
-    });
+      card.innerHTML += `<div style="margin-top:10px">${skillsHTML}</div>`;
 
-    tableHTML += "</table>";
-    resultDiv.innerHTML = tableHTML;
+      // Summary
+      card.innerHTML += `<p style="margin-top:10px; color:#6b7280">${cv.summary}</p>`;
+
+      resultDiv.appendChild(card);
+    });
 
   } catch (err) {
     console.error(err);
-    resultDiv.innerHTML = "<p>Error scoring CVs</p>";
+    resultDiv.innerHTML="<p>Error scoring CVs</p>";
   }
 });
 
 // CSV export
-document.getElementById("exportCSV").addEventListener("click", () => {
-  if (!lastResults) return alert("No results to export");
-
-  const rows = [];
-  const headers = ["Candidate", "JD Match", ...lastResults.allSkills, "Summary"];
+document.getElementById("exportCSV").addEventListener("click", ()=>{
+  if(!lastResults) return alert("No results");
+  const rows=[];
+  const headers=["Candidate","JD Match",...lastResults.allSkills,"Summary"];
   rows.push(headers.join(","));
-
-  lastResults.results.forEach(cv => {
-    const row = [cv.filename, cv.jdMatchScore];
-    lastResults.allSkills.forEach(skill => {
-      const skillObj = cv.skills.find(s => s.skill === skill);
-      row.push(skillObj?.score ? "1" : "0");
+  lastResults.results.forEach(cv=>{
+    const row=[cv.filename,cv.jdMatchScore];
+    lastResults.allSkills.forEach(skill=>{
+      const sObj=cv.skills.find(s=>s.skill===skill);
+      row.push(sObj?.score?"1":"0");
     });
     row.push(`"${cv.summary}"`);
     rows.push(row.join(","));
   });
-
-  const csvContent = "data:text/csv;charset=utf-8," + rows.join("\n");
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "cv_scores.csv");
+  const csvContent="data:text/csv;charset=utf-8,"+rows.join("\n");
+  const link=document.createElement("a");
+  link.setAttribute("href",encodeURI(csvContent));
+  link.setAttribute("download","cv_scores.csv");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+});
+
+// PDF export
+document.getElementById("exportPDF").addEventListener("click", ()=>{
+  if(!lastResults) return alert("No results");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  lastResults.results.forEach((cv,i)=>{
+    if(i>0) doc.addPage();
+    doc.setFontSize(16);
+    doc.text(cv.filename,14,20);
+    doc.setFontSize(12);
+    doc.text(`JD Match: ${cv.jdMatchScore}/5`,14,28);
+    // Skills
+    const skillsTable = lastResults.allSkills.map(skill=>{
+      const sObj=cv.skills.find(s=>s.skill===skill);
+      return [skill,sObj?.score?"✅":"❌"];
+    });
+    doc.autoTable({
+      startY:36,
+      head:[["Skill","Match"]],
+      body:skillsTable,
+      theme:'grid'
+    });
+    doc.text("Summary:",14,36+skillsTable.length*10+4);
+    doc.text(cv.summary,14,36+skillsTable.length*10+10);
+  });
+  doc.save("cv_scores.pdf");
 });
 </script>
 
