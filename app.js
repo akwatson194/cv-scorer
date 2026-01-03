@@ -19,10 +19,10 @@ app.post("/score", async (req, res) => {
 
   try {
     const prompt = `
-    Given the CV: "${cv}"
-    Score the following skills as 1 if mentioned, 0 if not: ${skills.join(", ")}
-    Respond ONLY as a JSON array of objects like [{ "skill": "Excel", "score": 1 }]
-    `;
+Given the CV: "${cv}"
+Score the following skills as 1 if mentioned, 0 if not: ${skills.join(", ")}
+Respond ONLY as a JSON array like [{ "skill": "Excel", "score": 1 }]
+`;
 
     const response = await openai.createCompletion({
       model: "text-davinci-003",
@@ -31,13 +31,14 @@ app.post("/score", async (req, res) => {
       temperature: 0
     });
 
-    // Parse OpenAI response
     const text = response.data.choices[0].text.trim();
     let scores;
+
     try {
       scores = JSON.parse(text);
     } catch {
-      scores = skills.map(skill => ({ skill, score: 0 })); // fallback
+      // fallback if parsing fails
+      scores = skills.map(skill => ({ skill, score: 0 }));
     }
 
     console.log("OpenAI scoring results:", scores);
@@ -49,11 +50,11 @@ app.post("/score", async (req, res) => {
   }
 });
 
-// Optional GET test route
+// Optional GET / route for testing in browser
 app.get("/", (req, res) => {
   res.send("CV Scorer with OpenAI is live! Use POST /score to test.");
 });
 
-// Use host-provided port or 3000
+// Listen on host-provided port or 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CV Scorer running on port ${PORT}`));
