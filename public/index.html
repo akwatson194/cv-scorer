@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>CV Skill Scorer</title>
+  <meta charset="UTF-8">
+  <title>CV Scorer</title>
   <style>
-    body { font-family: Arial; max-width: 800px; margin: 40px auto; }
-    textarea, input, button { width: 100%; margin: 10px 0; padding: 10px; }
+    body { font-family: Arial; max-width: 900px; margin: 40px auto; }
+    label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
     button { background: #2563eb; color: white; border: none; cursor: pointer; }
     .result { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px; }
     .cv-block { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
@@ -14,70 +14,73 @@
 </head>
 <body>
 
-  <h1>CV Skill Scorer</h1>
+<h1>CV Skill & Job Match Scorer</h1>
 
-  <label>Upload CVs (PDF, multiple allowed)</label>
-  <input type="file" id="cvFiles" accept="application/pdf" multiple />
+<label>Upload Job Description (PDF or Word)</label>
+<input type="file" id="jdFile" accept=".pdf,.doc,.docx" />
 
-  <label>Skills (comma separated)</label>
-  <textarea id="skills" placeholder="Excel, Power BI, SQL"></textarea>
+<label>Upload CVs (PDF or Word, multiple allowed)</label>
+<input type="file" id="cvFiles" accept=".pdf,.doc,.docx" multiple />
 
-  <button id="submitBtn">Score CVs</button>
+<label>Skills (comma separated)</label>
+<textarea id="skills" placeholder="Excel, Power BI, SQL"></textarea>
 
-  <div class="result" id="result"></div>
+<button id="submitBtn">Score CVs</button>
 
-  <script>
-    const submitBtn = document.getElementById("submitBtn");
-    const resultDiv = document.getElementById("result");
+<div class="result" id="result"></div>
 
-    submitBtn.addEventListener("click", async () => {
-      const filesInput = document.getElementById("cvFiles");
-      const skillsText = document.getElementById("skills").value;
-      const skills = skillsText.split(",").map(s => s.trim()).filter(Boolean);
+<script>
+  const submitBtn = document.getElementById("submitBtn");
+  const resultDiv = document.getElementById("result");
 
-      if (!skills.length) return alert("Please enter at least one skill");
-      if (!filesInput.files.length) return alert("Please upload at least one PDF CV");
+  submitBtn.addEventListener("click", async () => {
+    const jdInput = document.getElementById("jdFile");
+    const cvInput = document.getElementById("cvFiles");
+    const skillsText = document.getElementById("skills").value;
+    const skills = skillsText.split(",").map(s => s.trim()).filter(Boolean);
 
-      const formData = new FormData();
-      for (const file of filesInput.files) {
-        formData.append("cvFiles", file);
+    if (!skills.length) return alert("Enter at least one skill.");
+    if (!jdInput.files.length) return alert("Please upload a Job Description.");
+    if (!cvInput.files.length) return alert("Please upload at least one CV.");
+
+    const formData = new FormData();
+    formData.append("jdFile", jdInput.files[0]);
+    for (const file of cvInput.files) {
+      formData.append("cvFiles", file);
+    }
+    formData.append("skills", skills.join(","));
+
+    resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
+
+    try {
+      const response = await fetch("/upload", { method: "POST", body: formData });
+      const data = await response.json();
+
+      if (!data.results) {
+        resultDiv.innerHTML = "<p>No results returned</p>";
+        return;
       }
-      formData.append("skills", skills.join(","));
 
-      resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
+      resultDiv.innerHTML = "";
+      data.results.forEach((cv, index) => {
+        const cvBlock = document.createElement("div");
+        cvBlock.className = "cv-block";
+        cvBlock.innerHTML = `
+          <h2>${index + 1}. ${cv.filename} — Combined Score: ${cv.combinedScore}</h2>
+          <p><strong>JD Match Score:</strong> ${cv.jdMatchScore}/5</p>
+          <p><strong>Skills:</strong> ${cv.skills.map(s => `${s.skill}: ${s.score ? "✅" : "❌"}`).join(", ")}</p>
+          <p><strong>Summary:</strong> ${cv.summary}</p>
+        `;
+        resultDiv.appendChild(cvBlock);
+      });
 
-      try {
-        const response = await fetch("/upload", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await response.json();
-
-        if (!data.results) {
-          resultDiv.innerHTML = "<p>No results returned</p>";
-          return;
-        }
-
-        // Display results in ranked order
-        resultDiv.innerHTML = "";
-        data.results.forEach((cv, index) => {
-          const cvBlock = document.createElement("div");
-          cvBlock.className = "cv-block";
-          cvBlock.innerHTML = `
-            <h2>${index + 1}. ${cv.filename} — Score: ${cv.totalScore}</h2>
-            <p><strong>Skills:</strong> ${cv.skills.map(s => `${s.skill}: ${s.score ? "✅" : "❌"}`).join(", ")}</p>
-            <p><strong>Summary:</strong> ${cv.summary}</p>
-          `;
-          resultDiv.appendChild(cvBlock);
-        });
-
-      } catch (err) {
-        console.error(err);
-        resultDiv.innerHTML = "<p>Error scoring CVs</p>";
-      }
-    });
-  </script>
+    } catch (err) {
+      console.error(err);
+      resultDiv.innerHTML = "<p>Error scoring CVs</p>";
+    }
+  });
+</script>
 
 </body>
 </html>
+
