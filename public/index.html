@@ -12,6 +12,7 @@ th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
 th { background: #f3f3f3; }
 td.skill { font-size: 18px; }
 td.summary { text-align: left; }
+button.export { margin-top: 20px; background: #10b981; }
 </style>
 </head>
 <body>
@@ -28,12 +29,15 @@ td.summary { text-align: left; }
 <textarea id="skills" placeholder="Excel, Power BI, SQL"></textarea>
 
 <button id="submitBtn">Score CVs</button>
-
 <div id="result"></div>
 
+<button class="export" id="exportCSV">Export CSV</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const submitBtn = document.getElementById("submitBtn");
 const resultDiv = document.getElementById("result");
+let lastResults = null;
 
 submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
@@ -55,18 +59,25 @@ submitBtn.addEventListener("click", async () => {
   try {
     const response = await fetch("/upload", { method: "POST", body: formData });
     const data = await response.json();
+    lastResults = data;
 
     if (!data.results) { resultDiv.innerHTML = "<p>No results returned</p>"; return; }
 
     let tableHTML = "<table><tr><th>Candidate</th><th>JD Match</th>";
-    skills.forEach(skill => tableHTML += `<th>${skill}</th>`);
+    data.allSkills.forEach(skill => tableHTML += `<th>${skill}</th>`);
     tableHTML += "<th>Summary</th></tr>";
 
     data.results.forEach(cv => {
-      tableHTML += "<tr>";
+      // Colour code row based on JD match
+      let bgColor = "#fff";
+      if (cv.jdMatchScore >= 4) bgColor = "#c6f6d5";
+      else if (cv.jdMatchScore >= 2) bgColor = "#fefcbf";
+      else bgColor = "#fed7d7";
+
+      tableHTML += `<tr style="background-color:${bgColor}">`;
       tableHTML += `<td>${cv.filename}</td>`;
       tableHTML += `<td>${cv.jdMatchScore}/5</td>`;
-      skills.forEach(skill => {
+      data.allSkills.forEach(skill => {
         const skillObj = cv.skills.find(s => s.skill === skill);
         tableHTML += `<td class="skill">${skillObj?.score ? "✅" : "❌"}</td>`;
       });
@@ -82,10 +93,39 @@ submitBtn.addEventListener("click", async () => {
     resultDiv.innerHTML = "<p>Error scoring CVs</p>";
   }
 });
+
+// CSV export
+document.getElementById("exportCSV").addEventListener("click", () => {
+  if (!lastResults) return alert("No results to export");
+
+  const rows = [];
+  const headers = ["Candidate", "JD Match", ...lastResults.allSkills, "Summary"];
+  rows.push(headers.join(","));
+
+  lastResults.results.forEach(cv => {
+    const row = [cv.filename, cv.jdMatchScore];
+    lastResults.allSkills.forEach(skill => {
+      const skillObj = cv.skills.find(s => s.skill === skill);
+      row.push(skillObj?.score ? "1" : "0");
+    });
+    row.push(`"${cv.summary}"`);
+    rows.push(row.join(","));
+  });
+
+  const csvContent = "data:text/csv;charset=utf-8," + rows.join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "cv_scores.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
 </script>
 
 </body>
 </html>
+
 
 
 
