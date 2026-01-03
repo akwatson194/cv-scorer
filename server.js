@@ -7,13 +7,11 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// Serve front-end HTML from public folder
+// Serve static front-end
 app.use(express.static("public"));
 
 // Setup OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // POST /score endpoint
 app.post("/score", async (req, res) => {
@@ -24,23 +22,30 @@ app.post("/score", async (req, res) => {
   }
 
   try {
-    const prompt = `
-You are evaluating a CV.
-CV content: "${cv}"
+    const messages = [
+      {
+        role: "system",
+        content: "You are an assistant that evaluates CVs for specific skills."
+      },
+      {
+        role: "user",
+        content: `Given the CV: "${cv}"
 Score the following skills: ${skills.join(", ")}.
 Respond ONLY as a JSON array like:
 [{ "skill": "Excel", "score": 1 }]
-Use 1 if the skill is mentioned, 0 if not.
-`;
+Use 1 if the skill is mentioned, 0 if not.`
+      }
+    ];
 
-    const completion = await openai.completions.create({
-      model: "text-davinci-003",
-      prompt,
-      max_tokens: 150,
-      temperature: 0
+    // Call chat completions API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages,
+      temperature: 0,
+      max_tokens: 200
     });
 
-    const text = completion.choices[0].text.trim();
+    const text = completion.choices[0].message.content.trim();
     let scores;
 
     try {
