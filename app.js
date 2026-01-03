@@ -1,63 +1,71 @@
-// app.js
+// server.js
 const express = require("express");
-require("dotenv").config();
+const dotenv = require("dotenv");
 const OpenAI = require("openai").default;
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// Setup OpenAI (v4+)
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// POST /score endpoint
+// POST /score - evaluates CV against provided skills
 app.post("/score", async (req, res) => {
-  const { skills, cv } = req.body;
-  if (!skills || !cv) {
-    return res.status(400).json({ error: "Skills and CV required" });
+  const { cv, skills } = req.body;
+
+  if (!cv || !Array.isArray(skills) || skills.length === 0) {
+    return res.status(400).json({ error: "Please provide a CV and at least one skill." });
   }
 
   try {
+    // Build prompt for OpenAI
     const prompt = `
-Given the CV: "${cv}"
-Score the following skills as 1 if mentioned, 0 if not: ${skills.join(", ")}
-Respond ONLY as a JSON array like [{ "skill": "Excel", "score": 1 }]
+You are evaluating a CV.
+CV content: "${cv}"
+Score the following skills: ${skills.join(", ")}.
+Respond ONLY as a JSON array like:
+[{ "skill": "Excel", "score": 1 }]
+Use 1 if the skill is mentioned, 0 if not.
 `;
 
-    // Call OpenAI completions API (v4 syntax)
-    const response = await openai.completions.create({
+    // Call OpenAI API
+    const completion = await openai.completions.create({
       model: "text-davinci-003",
-      prompt: prompt,
+      prompt,
       max_tokens: 150,
       temperature: 0
     });
 
-    const text = response.choices[0].text.trim();
+    const resultText = completion.choices[0].text.trim();
     let scores;
 
     try {
-      scores = JSON.parse(text);
-    } catch {
-      // fallback if parsing fails
-      scores = skills.map(skill => ({ skill, score: 0 }));
+      scores = JSON.parse(resultText);
+    } catch (parseError) {
+      console.error("Failed to parse OpenAI response:", resultText);
+      scores = skills.map(skill => ({ skill, score: 0 })); // fallback
     }
 
-    console.log("OpenAI scoring results:", scores);
+    console.log("Scoring result:", scores);
     res.json({ scores });
 
-  } catch (err) {
-    console.error("OpenAI API error:", err.message);
-    res.status(500).json({ error: "Failed to score CV" });
+  } catch (error) {
+    console.error("OpenAI API call failed:", error.message);
+    res.status(500).json({ error: "Unable to score CV at this time." });
   }
 });
 
-// Optional GET route to test in browser
+// Simple GET route for testing in browser
 app.get("/", (req, res) => {
-  res.send("CV Scorer with OpenAI v4 is live! Use POST /score to test.");
+  res.send("CV Scorer is live! Submit a POST request to /score with CV and skills.");
 });
 
-// Listen on host-provided port or 3000
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`CV Scorer running on port ${PORT}`));
-
+app.listen(PORT, () => {
+  console.log(`CV Scorer running on port ${PORT}`);
+});
