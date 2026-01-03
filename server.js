@@ -1,66 +1,115 @@
+// server.js (multi-CV scoring version)
 const express = require("express");
-const dotenv = require("dotenv");
+require("dotenv").config();
 const OpenAI = require("openai").default;
 const multer = require("multer");
-const fs = require("fs");
-const pdf = require("pdf-parse");
+const pdfParse = require("pdf-parse");
 
-dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(express.static("public")); // serve front-end
+app.use(express.static("public"));
 
 // OpenAI setup
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
-// Multer setup: uploaded PDFs go in 'uploads/'
-const upload = multer({ dest: "uploads/" });
+// Multer setup for memory storage (works with Render)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// New POST endpoint for PDF upload
-app.post("/upload", upload.single("cvFile"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
+// ---------------------------
+// POST /upload endpoint
+// ---------------------------
+app.post("/upload", upload.array("cvFiles", 10), async (req, res) => {
   try {
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const data = await pdf(fileBuffer);
-    const cvText = data.text;
+    // Get skills from request body
+    const skills = req.body.skills
+      ?.split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-    // Delete file after reading
-    fs.unlinkSync(req.file.path);
-
-    // Example: simple scoring
-    const skills = req.body.skills ? req.body.skills.split(",").map(s => s.trim()) : [];
-    if (!skills.length) return res.status(400).json({ error: "No skills provided" });
-
-    // OpenAI request
-    const messages = [
-      { role: "system", content: "You are an assistant that scores CVs for specific skills." },
-      { role: "user", content: `CV: "${cvText}"\nScore skills: ${skills.join(", ")}.\nRespond only as JSON array like [{ "skill": "Excel", "score": 1 }]` }
-    ];
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages,
-      temperature: 0,
-      max_tokens: 200
-    });
-
-    let scores;
-    try {
-      scores = JSON.parse(completion.choices[0].message.content.trim());
-    } catch {
-      scores = skills.map(skill => ({ skill, score: 0 }));
+    if (!skills || !skills.length) {
+      return res.status(400).json({ error: "Skills required" });
     }
 
-    res.json({ scores });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No CV files uploaded" });
+    }
+
+    const results = [];
+
+    // Loop over each uploaded CV
+    for (const file of req.files) {
+      // 1️⃣ Extract text from PDF
+      const pdfData = await pdfParse(file.buffer);
+      const cvText = pdfData.text;
+
+      // 2️⃣ Call OpenAI to score skills + summary
+      const prompt = `
+You are a recruitment assistant.
+Given this CV text:
+"${cvText}"
+
+Score the following skills as 1 if mentioned, 0 if not:
+${skills.join(", ")}
+
+Then give a 1–2 sentence professional summary.
+
+Respond ONLY as JSON in this format:
+{
+  "skills": [{ "skill": "Excel", "score": 1 }],
+  "summary": "Short summary here"
+}
+`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0
+      });
+
+      let parsed;
+      try {
+        parsed = JSON.parse(response.choices[0].message.content);
+      } catch {
+        parsed = {
+          skills: skills.map(s => ({ skill: s, score: 0 })),
+          summary: "Unable to generate summary"
+        };
+      }
+
+      // Calculate total score
+      const totalScore = parsed.skills.reduce(
+        (sum, s) => sum + (s.score || 0),
+        0
+      );
+
+      results.push({
+        filename: file.originalname,
+        totalScore,
+        skills: parsed.skills,
+        summary: parsed.summary
+      });
+    }
+
+    // 3️⃣ Rank candidates by total score (highest first)
+    results.sort((a, b) => b.totalScore - a.totalScore);
+
+    // 4️⃣ Return JSON
+    res.json({ results });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to process PDF" });
+    console.error("Multi-CV scoring error:", err);
+    res.status(500).json({ error: "Failed to score CVs" });
   }
 });
 
+// Optional GET route to test server
+app.get("/", (req, res) => {
+  res.send("CV Scorer backend is live! Use POST /upload for multi-CV scoring.");
+});
+
+// Listen on Render port or 3000
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`CV Scorer running on port ${PORT}`));
-
-
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
