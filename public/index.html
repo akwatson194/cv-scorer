@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CV Scorer</title>
-  <style>
-    body { font-family: Arial; max-width: 900px; margin: 40px auto; }
-    label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-    button { background: #2563eb; color: white; border: none; cursor: pointer; }
-    .result { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px; }
-    .cv-block { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
-    h2 { margin-bottom: 5px; }
-  </style>
+<meta charset="UTF-8">
+<title>CV Scorer</title>
+<style>
+  body { font-family: Arial; max-width: 1000px; margin: 40px auto; }
+  label, textarea, input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+  button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  th { background: #f3f3f3; }
+  td.skill { font-size: 18px; }
+  td.summary { text-align: left; }
+</style>
 </head>
 <body>
 
@@ -27,60 +29,72 @@
 
 <button id="submitBtn">Score CVs</button>
 
-<div class="result" id="result"></div>
+<div id="result"></div>
 
 <script>
-  const submitBtn = document.getElementById("submitBtn");
-  const resultDiv = document.getElementById("result");
+const submitBtn = document.getElementById("submitBtn");
+const resultDiv = document.getElementById("result");
 
-  submitBtn.addEventListener("click", async () => {
-    const jdInput = document.getElementById("jdFile");
-    const cvInput = document.getElementById("cvFiles");
-    const skillsText = document.getElementById("skills").value;
-    const skills = skillsText.split(",").map(s => s.trim()).filter(Boolean);
+submitBtn.addEventListener("click", async () => {
+  const jdInput = document.getElementById("jdFile");
+  const cvInput = document.getElementById("cvFiles");
+  const skillsText = document.getElementById("skills").value;
+  const skills = skillsText.split(",").map(s => s.trim()).filter(Boolean);
 
-    if (!skills.length) return alert("Enter at least one skill.");
-    if (!jdInput.files.length) return alert("Please upload a Job Description.");
-    if (!cvInput.files.length) return alert("Please upload at least one CV.");
+  if (!skills.length) return alert("Enter at least one skill.");
+  if (!jdInput.files.length) return alert("Please upload a Job Description.");
+  if (!cvInput.files.length) return alert("Please upload at least one CV.");
 
-    const formData = new FormData();
-    formData.append("jdFile", jdInput.files[0]);
-    for (const file of cvInput.files) {
-      formData.append("cvFiles", file);
+  const formData = new FormData();
+  formData.append("jdFile", jdInput.files[0]);
+  for (const file of cvInput.files) {
+    formData.append("cvFiles", file);
+  }
+  formData.append("skills", skills.join(","));
+
+  resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
+
+  try {
+    const response = await fetch("/upload", { method: "POST", body: formData });
+    const data = await response.json();
+
+    if (!data.results) {
+      resultDiv.innerHTML = "<p>No results returned</p>";
+      return;
     }
-    formData.append("skills", skills.join(","));
 
-    resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
+    // Generate table headers
+    let tableHTML = "<table><tr><th>Candidate</th><th>JD Match</th>";
+    skills.forEach(skill => {
+      tableHTML += `<th>${skill}</th>`;
+    });
+    tableHTML += "<th>Summary</th></tr>";
 
-    try {
-      const response = await fetch("/upload", { method: "POST", body: formData });
-      const data = await response.json();
-
-      if (!data.results) {
-        resultDiv.innerHTML = "<p>No results returned</p>";
-        return;
-      }
-
-      resultDiv.innerHTML = "";
-      data.results.forEach((cv, index) => {
-        const cvBlock = document.createElement("div");
-        cvBlock.className = "cv-block";
-        cvBlock.innerHTML = `
-          <h2>${index + 1}. ${cv.filename} — Combined Score: ${cv.combinedScore}</h2>
-          <p><strong>JD Match Score:</strong> ${cv.jdMatchScore}/5</p>
-          <p><strong>Skills:</strong> ${cv.skills.map(s => `${s.skill}: ${s.score ? "✅" : "❌"}`).join(", ")}</p>
-          <p><strong>Summary:</strong> ${cv.summary}</p>
-        `;
-        resultDiv.appendChild(cvBlock);
+    // Fill table rows
+    data.results.forEach(cv => {
+      tableHTML += `<tr>`;
+      tableHTML += `<td>${cv.filename}</td>`;
+      tableHTML += `<td>${cv.jdMatchScore}/5</td>`;
+      skills.forEach(skill => {
+        const skillObj = cv.skills.find(s => s.skill.toLowerCase() === skill.toLowerCase());
+        tableHTML += `<td class="skill">${skillObj?.score ? "✅" : "❌"}</td>`;
       });
+      tableHTML += `<td class="summary">${cv.summary}</td>`;
+      tableHTML += `</tr>`;
+    });
 
-    } catch (err) {
-      console.error(err);
-      resultDiv.innerHTML = "<p>Error scoring CVs</p>";
-    }
-  });
+    tableHTML += "</table>";
+    resultDiv.innerHTML = tableHTML;
+
+  } catch (err) {
+    console.error(err);
+    resultDiv.innerHTML = "<p>Error scoring CVs</p>";
+  }
+});
 </script>
 
 </body>
 </html>
+
+
 
