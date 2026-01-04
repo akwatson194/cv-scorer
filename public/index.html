@@ -6,33 +6,65 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd;
-  --accent-color: #228B22;  /* forest green */
+  --primary-color: #0d6efd;       /* muted blue accents */
+  --accent-color: #228B22;        /* forest green for skills present */
+  --skill-no: #dc3545;             /* red for missing skills */
+  --skill-ai: #0d6efd;             /* blue for AI suggested only */
   --bg-light: #f5f7fa;
   --card-bg: #ffffff;
   --text-color: #212529;
   --text-muted: #6c757d;
-  --skill-no: #dc3545;
   --hero-gradient: linear-gradient(135deg, #0d6efd, #228B22);
 }
-body { font-family:'Quicksand', sans-serif; margin:0; padding:0; background:var(--bg-light); color:var(--text-color); }
+
+body {
+  font-family: 'Quicksand', sans-serif;
+  margin:0; padding:0;
+  background: var(--bg-light);
+  color: var(--text-color);
+}
+
 h1,h2,h3 { margin:0; font-weight:700; }
 p { font-weight:400; }
+
 .container { max-width:900px; margin:auto; padding:20px; text-align:center; }
 button { cursor:pointer; transition:0.3s; font-family:'Quicksand', sans-serif; }
-button#submitBtn { background: var(--primary-color); color:#fff; font-weight:700; border:none; border-radius:12px; padding:12px 20px; font-size:16px; margin-top:20px; }
+button#submitBtn { 
+  background: var(--primary-color); color:#fff; font-weight:700; border:none; border-radius:12px;
+  padding:12px 20px; font-size:16px; margin-top:20px;
+}
 button#submitBtn:hover { background: var(--accent-color); }
-button.export { background: var(--card-bg); border: 2px solid var(--primary-color); color: var(--primary-color); border-radius:12px; padding:10px 16px; font-weight:700; margin-top:10px; width:48%; }
+
+button.export {
+  background: var(--card-bg); border: 2px solid var(--primary-color); color: var(--primary-color);
+  border-radius:12px; padding:10px 16px; font-weight:700; margin-top:10px; width:48%;
+}
 button.export:hover { background: var(--primary-color); color:#fff; }
 
-input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; font-family:'Quicksand', sans-serif; }
+input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; }
 textarea { min-height:50px; resize:vertical; }
 
-.hero { background: var(--hero-gradient); color:#fff; padding:60px 20px; text-align:center; border-radius:12px; margin-bottom:30px; }
+.hero {
+  background: var(--hero-gradient);
+  color:#fff;
+  padding:60px 20px;
+  text-align:center;
+  border-radius:12px;
+  margin-bottom:30px;
+}
 .hero h1 { font-size:48px; margin-bottom:10px; }
 .hero p { font-size:18px; }
 
-.card { background: var(--card-bg); padding:20px; margin:20px auto; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.08); max-width:800px; transition: transform 0.3s, box-shadow 0.3s; text-align:left; }
+.card {
+  background: var(--card-bg);
+  padding:20px;
+  margin:20px auto;
+  border-radius:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+  max-width:800px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align:left;
+}
 .card:hover { transform:scale(1.02); box-shadow:0 10px 25px rgba(0,0,0,0.15); }
 
 .flex-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
@@ -40,6 +72,7 @@ textarea { min-height:50px; resize:vertical; }
 .skill-chip { display:block; padding:8px 12px; margin:3px 0; border-radius:20px; font-size:13px; text-align:center; font-weight:500;}
 .skill-yes { background: var(--accent-color); color:#fff; }
 .skill-no { background: var(--skill-no); color:#fff; }
+.skill-ai { background: var(--skill-ai); color:#fff; }
 .progress-bar { height:14px; border-radius:6px; background:#e9ecef; margin-top:6px; }
 .progress-fill { height:14px; border-radius:6px; background: var(--accent-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
@@ -50,17 +83,20 @@ section h2 { color:var(--primary-color); margin-bottom:20px; font-size:32px; }
 section p, section ul { max-width:700px; margin:auto; font-size:16px; line-height:1.6; }
 section ul { list-style:none; padding:0; }
 section ul li { margin:10px 0; }
+
 .cta-section { background:var(--accent-color); color:#fff; border-radius:12px; text-align:center; margin:40px 0; padding:60px 20px; }
 .cta-section button { background:#fff; color:var(--accent-color); padding:12px 24px; font-size:16px; font-weight:700; border:none; border-radius:12px; cursor:pointer; }
 </style>
 </head>
 <body>
 
+<!-- Hero -->
 <div class="hero">
   <h1>CV Scorer Dashboard</h1>
   <p>Upload your Job Description and CVs to automatically score candidates and generate a ranked leaderboard.</p>
 </div>
 
+<!-- Upload Section -->
 <div class="container" id="uploadSection">
   <label>Job Description (PDF/Word)</label>
   <input type="file" id="jdFile" accept=".pdf,.doc,.docx">
@@ -74,6 +110,7 @@ section ul li { margin:10px 0; }
   <button id="submitBtn">Score CVs</button>
 </div>
 
+<!-- Leaderboard / Results -->
 <div id="result" class="container"></div>
 
 <div class="container" style="display:flex; justify-content:space-between;">
@@ -81,12 +118,13 @@ section ul li { margin:10px 0; }
   <button class="export" id="exportPDF">Export PDF</button>
 </div>
 
-<!-- Explanatory Sections -->
+<!-- Why Use This Site -->
 <section style="background:#fff; text-align:center;">
   <h2>Why Use Our CV Scorer?</h2>
   <p>Reviewing CVs manually is time-consuming and inconsistent. Our AI-powered CV Scorer automatically evaluates each candidate, ranks them against your job description, and highlights the most relevant skills.</p>
 </section>
 
+<!-- What You'll Get -->
 <section style="background:var(--bg-light); text-align:center;">
   <h2>What You'll Get</h2>
   <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:30px;">
@@ -105,6 +143,7 @@ section ul li { margin:10px 0; }
   </div>
 </section>
 
+<!-- Additional Features -->
 <section style="background:#fff; text-align:center;">
   <h2>Additional Features</h2>
   <ul>
@@ -116,6 +155,7 @@ section ul li { margin:10px 0; }
   </ul>
 </section>
 
+<!-- Call To Action -->
 <section class="cta-section">
   <h2>Start Scoring CVs Instantly</h2>
   <p>Upload your job description and CVs now to see top candidates ranked automatically.</p>
@@ -128,14 +168,13 @@ section ul li { margin:10px 0; }
 const submitBtn = document.getElementById("submitBtn");
 const resultDiv = document.getElementById("result");
 let lastResults = null;
-
-function capitalizeWords(str){ return str.replace(/\b\w/g, c=>c.toUpperCase()); }
+const capitalizeWords = str => str.replace(/\b\w/g, c => c.toUpperCase());
 
 submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
   const cvInput = document.getElementById("cvFiles");
   const skillsText = document.getElementById("skills").value;
-  let skills = skillsText.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+  let userSkills = skillsText.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 
   if (!jdInput.files.length) return alert("Please upload a Job Description.");
   if (!cvInput.files.length) return alert("Please upload at least one CV.");
@@ -143,7 +182,7 @@ submitBtn.addEventListener("click", async () => {
   const formData = new FormData();
   formData.append("jdFile", jdInput.files[0]);
   for (const file of cvInput.files) formData.append("cvFiles", file);
-  formData.append("skills", skills.join(","));
+  formData.append("skills", userSkills.join(","));
 
   resultDiv.innerHTML = "<p>Scoring CVs… please wait</p>";
 
@@ -154,26 +193,45 @@ submitBtn.addEventListener("click", async () => {
 
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
+    // --- Compute Global Top Skills ---
+    const skillCountMap = {};
+    data.results.forEach(cv => {
+      cv.skills.forEach(s => {
+        const skill = s.skill.toLowerCase();
+        if (!skillCountMap[skill]) skillCountMap[skill] = 0;
+        if (s.score) skillCountMap[skill]++;
+      });
+    });
+
+    // Include userSkills to always appear
+    userSkills.forEach(skill => {
+      if (!skillCountMap[skill]) skillCountMap[skill] = 0;
+    });
+
+    let globalSkills = Object.keys(skillCountMap)
+      .sort((a,b) => skillCountMap[b] - skillCountMap[a])
+      .slice(0,10);
+    while(globalSkills.length < 5) globalSkills.push("-");
+
     const sortedResults = data.results.sort((a,b) => b.jdMatchScore - a.jdMatchScore);
     resultDiv.innerHTML = "";
 
     sortedResults.forEach((cv,index)=>{
       const card = document.createElement("div");
       card.className = "card";
+
       let badge = "";
       if(index===0) badge="🏆"; else if(index===1) badge="🥈"; else if(index===2) badge="🥉";
       card.innerHTML += `<h2 style="text-align:center;">${cv.filename}<span class="badge">${badge}</span></h2>`;
 
-      // Ensure 5-10 skills
-      const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
-      while(sortedSkills.length<5) sortedSkills.push({skill:"-", score:0});
-      if(sortedSkills.length>10) sortedSkills.length=10;
-      const topSkills = sortedSkills;
-
       let leftCol="", rightCol="";
-      topSkills.forEach((skill,i)=>{
-        const cls = skill.score ? "skill-yes":"skill-no";
-        const skillName = capitalizeWords(skill.skill);
+      globalSkills.forEach((skill,i)=>{
+        const skillObj = cv.skills.find(s => s.skill.toLowerCase() === skill.toLowerCase());
+        let cls = "skill-no";
+        if(skillObj?.score) cls = "skill-yes";
+        else if(!userSkills.includes(skill.toLowerCase()) && skill !== "-") cls = "skill-ai";
+
+        const skillName = capitalizeWords(skill);
         if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
         else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
@@ -196,7 +254,7 @@ submitBtn.addEventListener("click", async () => {
   }
 });
 
-// CSV Export
+// --- CSV & PDF Export ---
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
@@ -205,7 +263,7 @@ document.getElementById("exportCSV").addEventListener("click", ()=>{
   lastResults.results.forEach(cv=>{
     const row=[cv.filename,cv.jdMatchScore];
     lastResults.allSkills.forEach(skill=>{
-      const sObj=cv.skills.find(s=>s.skill===skill);
+      const sObj=cv.skills.find(s=>s.skill.toLowerCase()===skill.toLowerCase());
       row.push(sObj?.score?"1":"0");
     });
     row.push(`"${cv.summary}"`);
@@ -220,7 +278,6 @@ document.getElementById("exportCSV").addEventListener("click", ()=>{
   document.body.removeChild(link);
 });
 
-// PDF Export
 document.getElementById("exportPDF").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const { jsPDF } = window.jspdf;
@@ -228,15 +285,19 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   const sortedResults = lastResults.results.sort((a,b)=>b.jdMatchScore - a.jdMatchScore);
   sortedResults.forEach((cv,i)=>{
     if(i>0) doc.addPage();
-    doc.setFontSize(16);
-    doc.setFont("Quicksand");
+    doc.setFontSize(16); doc.setFont("Quicksand");
     doc.text(cv.filename,14,20);
     doc.setFontSize(12);
     doc.text(`Job Description Match: ${cv.jdMatchScore}/5`,14,28);
+
     const skillsTable = lastResults.allSkills.map(skill=>{
-      const sObj=cv.skills.find(s=>s.skill===skill);
-      return [capitalizeWords(skill), sObj?.score?"✅":"❌"];
+      const sObj = cv.skills.find(s => s.skill.toLowerCase()===skill.toLowerCase());
+      let symbol = "❌", color = [255,0,0];
+      if(sObj?.score){ symbol="✅"; color=[34,139,34]; } // green
+      else if(!lastResults.allSkills.slice(0,5).includes(skill.toLowerCase())) { symbol="⚪"; color=[13,110,253]; } // blue
+      return [capitalizeWords(skill), symbol];
     });
+
     doc.autoTable({ startY:36, head:[["Skill","Match"]], body:skillsTable, theme:'grid' });
     doc.text("Summary:",14,36+skillsTable.length*10+4);
     doc.text(cv.summary,14,36+skillsTable.length*10+10);
@@ -244,13 +305,14 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   doc.save("cv_scores.pdf");
 });
 
-// CTA Scroll
+// Scroll to upload
 document.getElementById('jumpToUpload').addEventListener('click', ()=>{
   document.getElementById('uploadSection').scrollIntoView({ behavior:'smooth' });
 });
 </script>
 </body>
 </html>
+
 
 
 
