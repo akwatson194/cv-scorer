@@ -14,6 +14,8 @@ button { background: #2563eb; color: white; border: none; cursor: pointer; font-
 .progress-bar { height:14px; border-radius:6px; background:#e5e7eb; margin:5px 0; }
 .progress-fill { height:14px; border-radius:6px; background:#2563eb; }
 button.export { margin-top:10px; background:#10b981; }
+.flex-row { display:flex; gap:20px; flex-wrap:wrap; }
+.flex-col { flex:1; }
 </style>
 </head>
 <body>
@@ -42,6 +44,11 @@ const submitBtn = document.getElementById("submitBtn");
 const resultDiv = document.getElementById("result");
 let lastResults = null;
 
+// Helper: Capitalize words
+function capitalizeWords(str){
+  return str.replace(/\b\w/g, c=>c.toUpperCase());
+}
+
 submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
   const cvInput = document.getElementById("cvFiles");
@@ -65,7 +72,7 @@ submitBtn.addEventListener("click", async () => {
 
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
-    // Sort candidates by JD match descending
+    // Sort candidates by Job Description match descending
     const sortedResults = data.results.sort((a,b) => b.jdMatchScore - a.jdMatchScore);
 
     resultDiv.innerHTML = "";
@@ -80,26 +87,32 @@ submitBtn.addEventListener("click", async () => {
       else if(index === 2) badge = " 🥉";
       card.innerHTML += `<h2>${cv.filename}${badge}</h2>`;
 
-      // JD Match
-      const percent = (cv.jdMatchScore/5)*100;
-      card.innerHTML += `<div>JD Match: ${cv.jdMatchScore}/5</div>`;
-      card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
-
-      // Top 10 skills
+      // Top 10 skills in 2 columns
       const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
       const topSkills = sortedSkills.slice(0,10);
-      let skillsHTML = "";
-      topSkills.forEach(skill => {
-        const cls = skill.score ? "skill-yes" : "skill-no";
-        skillsHTML += `<span class="skill-chip ${cls}">${skill.skill}</span>`;
+      let leftCol="", rightCol="";
+      topSkills.forEach((skill,i)=>{
+        const cls = skill.score ? "skill-yes":"skill-no";
+        const skillName = capitalizeWords(skill.skill);
+        if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
+        else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
-      if(sortedSkills.length > 10){
-        skillsHTML += `<span style="margin-left:5px; font-size:12px; color:#6b7280">+${sortedSkills.length-10} more</span>`;
+      if(sortedSkills.length>10){
+        rightCol += `<div style="font-size:12px; color:#6b7280">+${sortedSkills.length-10} more</div>`;
       }
-      card.innerHTML += `<div style="margin-top:10px">${skillsHTML}</div>`;
 
-      // Summary
-      card.innerHTML += `<p style="margin-top:10px; color:#6b7280">${cv.summary}</p>`;
+      // Two-column layout: Skills left, Summary right
+      card.innerHTML += `
+      <div class="flex-row" style="margin-top:10px;">
+        <div class="flex-col">${leftCol}${rightCol}</div>
+        <div class="flex-col" style="color:#6b7280; padding-left:10px;">${cv.summary}</div>
+      </div>
+      `;
+
+      // Job Description Match
+      const percent = (cv.jdMatchScore/5)*100;
+      card.innerHTML += `<div style="margin-top:10px">Job Description Match: ${cv.jdMatchScore}/5</div>`;
+      card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
 
       resultDiv.appendChild(card);
     });
@@ -114,7 +127,7 @@ submitBtn.addEventListener("click", async () => {
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
-  const headers=["Candidate","JD Match",...lastResults.allSkills,"Summary"];
+  const headers=["Candidate","Job Description Match",...lastResults.allSkills,"Summary"];
   rows.push(headers.join(","));
   lastResults.results.forEach(cv=>{
     const row=[cv.filename,cv.jdMatchScore];
@@ -140,7 +153,7 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  // Sort candidates by JD match descending for PDF too
+  // Sort candidates by Job Description match descending
   const sortedResults = lastResults.results.sort((a,b)=>b.jdMatchScore - a.jdMatchScore);
 
   sortedResults.forEach((cv,i)=>{
@@ -148,11 +161,11 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
     doc.setFontSize(16);
     doc.text(cv.filename,14,20);
     doc.setFontSize(12);
-    doc.text(`JD Match: ${cv.jdMatchScore}/5`,14,28);
+    doc.text(`Job Description Match: ${cv.jdMatchScore}/5`,14,28);
     // Skills table with all skills
     const skillsTable = lastResults.allSkills.map(skill=>{
       const sObj=cv.skills.find(s=>s.skill===skill);
-      return [skill,sObj?.score?"✅":"❌"];
+      return [capitalizeWords(skill), sObj?.score?"✅":"❌"];
     });
     doc.autoTable({
       startY:36,
