@@ -6,14 +6,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd;   /* Blue accent */
-  --accent-color: #228B22;    /* Forest green */
-  --bg-light: #f8f9fa;
+  --primary-color: #0d6efd; /* muted blue for buttons/accents */
+  --accent-color: #228B22;  /* forest green for skills present */
+  --bg-light: #f5f7fa;
   --card-bg: #ffffff;
   --text-color: #212529;
   --text-muted: #6c757d;
   --skill-no: #dc3545;
-  --hero-bg: linear-gradient(135deg, #0d6efd 0%, #228B22 100%);
+  --hero-gradient: linear-gradient(135deg, #0d6efd, #228B22);
 }
 body {
   font-family: 'Quicksand', sans-serif;
@@ -40,7 +40,7 @@ input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid 
 textarea { min-height:50px; resize:vertical; }
 
 .hero {
-  background: var(--hero-bg);
+  background: var(--hero-gradient);
   color:#fff;
   padding:60px 20px;
   text-align:center;
@@ -64,9 +64,9 @@ textarea { min-height:50px; resize:vertical; }
 
 .flex-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
 .flex-col { flex:1; min-width:140px; }
-.skill-chip { display:block; padding:8px 12px; margin:3px 0; border-radius:20px; font-size:13px; color:white; text-align:center; font-weight:500;}
-.skill-yes { background: var(--primary-color); }
-.skill-no { background: var(--skill-no); }
+.skill-chip { display:block; padding:8px 12px; margin:3px 0; border-radius:20px; font-size:13px; text-align:center; font-weight:500;}
+.skill-yes { background: var(--accent-color); color:#fff; }
+.skill-no { background: var(--skill-no); color:#fff; }
 .progress-bar { height:14px; border-radius:6px; background:#e9ecef; margin-top:6px; }
 .progress-fill { height:14px; border-radius:6px; background: var(--accent-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
@@ -197,8 +197,11 @@ submitBtn.addEventListener("click", async () => {
       if(index===0) badge="🏆"; else if(index===1) badge="🥈"; else if(index===2) badge="🥉";
       card.innerHTML += `<h2 style="text-align:center;">${cv.filename}<span class="badge">${badge}</span></h2>`;
 
+      // Ensure at least 10 skills
       const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
+      while(sortedSkills.length<10) sortedSkills.push({skill:"-", score:0});
       const topSkills = sortedSkills.slice(0,10);
+
       let leftCol="", rightCol="";
       topSkills.forEach((skill,i)=>{
         const cls = skill.score ? "skill-yes":"skill-no";
@@ -206,7 +209,6 @@ submitBtn.addEventListener("click", async () => {
         if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
         else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
-      if(sortedSkills.length>10) rightCol += `<div style="font-size:12px; color:#6c757d; text-align:center;">+${sortedSkills.length-10} more</div>`;
 
       card.innerHTML += `<div class="flex-row">
         <div class="flex-col">${leftCol}${rightCol}</div>
@@ -280,6 +282,7 @@ document.getElementById('jumpToUpload').addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
