@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>CV Scorer Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd;   /* Blue similar to Teamtailor */
+  --primary-color: #0d6efd;   /* Blue accent */
   --accent-color: #228B22;    /* Forest green */
   --bg-light: #f8f9fa;
   --card-bg: #ffffff;
@@ -16,26 +16,27 @@
   --hero-bg: linear-gradient(135deg, #0d6efd 0%, #228B22 100%);
 }
 body {
-  font-family: 'Nanum Myeongjo', serif;
+  font-family: 'Quicksand', sans-serif;
   margin:0; padding:0;
   background: var(--bg-light);
   color: var(--text-color);
 }
-h1,h2,h3 { margin:0; }
+h1,h2,h3 { margin:0; font-weight:700; }
+p { font-weight:400; }
 .container { max-width:900px; margin:auto; padding:20px; text-align:center; }
-button { cursor:pointer; transition:0.3s; }
+button { cursor:pointer; transition:0.3s; font-family:'Quicksand', sans-serif; }
 button#submitBtn { 
-  background: var(--primary-color); color:#fff; font-weight:600; border:none; border-radius:12px;
+  background: var(--primary-color); color:#fff; font-weight:700; border:none; border-radius:12px;
   padding:12px 20px; font-size:16px; margin-top:20px;
 }
 button#submitBtn:hover { background: var(--accent-color); }
 button.export {
   background: var(--card-bg); border: 2px solid var(--primary-color); color: var(--primary-color);
-  border-radius:12px; padding:10px 16px; font-weight:600; margin-top:10px; width:48%;
+  border-radius:12px; padding:10px 16px; font-weight:700; margin-top:10px; width:48%;
 }
 button.export:hover { background: var(--primary-color); color:#fff; }
 
-input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; }
+input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; font-family:'Quicksand', sans-serif; }
 textarea { min-height:50px; resize:vertical; }
 
 .hero {
@@ -77,7 +78,7 @@ section p, section ul { max-width:700px; margin:auto; font-size:16px; line-heigh
 section ul { list-style:none; padding:0; }
 section ul li { margin:10px 0; }
 .cta-section { background:var(--accent-color); color:#fff; border-radius:12px; text-align:center; margin:40px 0; padding:60px 20px; }
-.cta-section button { background:#fff; color:var(--accent-color); padding:12px 24px; font-size:16px; font-weight:600; border:none; border-radius:12px; cursor:pointer; }
+.cta-section button { background:#fff; color:var(--accent-color); padding:12px 24px; font-size:16px; font-weight:700; border:none; border-radius:12px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -257,6 +258,7 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   sortedResults.forEach((cv,i)=>{
     if(i>0) doc.addPage();
     doc.setFontSize(16);
+    doc.setFont("Quicksand");
     doc.text(cv.filename,14,20);
     doc.setFontSize(12);
     doc.text(`Job Description Match: ${cv.jdMatchScore}/5`,14,28);
