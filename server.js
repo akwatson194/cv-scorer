@@ -15,7 +15,10 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// POST /upload
+// Helper: capitalize words
+const capitalizeWords = (str) => str.replace(/\b\w/g, c => c.toUpperCase());
+
+// POST /upload – handle CV + JD
 app.post("/upload", upload.fields([
   { name: "cvFiles", maxCount: 10 },
   { name: "jdFile", maxCount: 1 }
@@ -23,8 +26,10 @@ app.post("/upload", upload.fields([
   try {
     let userSkills = req.body.skills?.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 
-    if (!req.files || !req.files.cvFiles) return res.status(400).json({ error: "No CV files uploaded" });
-    if (!req.files.jdFile || req.files.jdFile.length === 0) return res.status(400).json({ error: "No Job Description uploaded" });
+    if (!req.files?.cvFiles || req.files.cvFiles.length === 0)
+      return res.status(400).json({ error: "No CV files uploaded" });
+    if (!req.files?.jdFile || req.files.jdFile.length === 0)
+      return res.status(400).json({ error: "No Job Description uploaded" });
 
     // Extract JD text
     const jdFile = req.files.jdFile[0];
@@ -38,16 +43,16 @@ app.post("/upload", upload.fields([
     }
     jdText = jdText.replace(/[\r\n]+/g, " ").trim();
 
-    // Step 1: Extract suggested skills from JD if userSkills is empty
+    // Step 1: Extract suggested skills from JD if userSkills empty
     if (!userSkills || userSkills.length === 0) {
-      const skillPrompt = `
+      try {
+        const skillPrompt = `
 You are a recruitment assistant.
-Given the following job description, suggest a list of skills relevant to this role.
+Given the following job description, suggest a list of relevant skills (minimum 5, maximum 10).
 Job Description:
 "${jdText}"
-Respond as a JSON array of skill strings.
+Respond ONLY as a JSON array of skill strings.
 `;
-      try {
         const skillResp = await openai.chat.completions.create({
           model: "gpt-3.5-turbo",
           messages: [{ role: "user", content: skillPrompt }],
@@ -74,7 +79,7 @@ Respond as a JSON array of skill strings.
         } else {
           results.push({
             filename: file.originalname,
-            skills: userSkills.map(s => ({ skill: s, score: 0 })),
+            skills: userSkills.map(s => ({ skill: capitalizeWords(s), score: 0 })),
             jdMatchScore: 0,
             summary: "Unsupported file type"
           });
@@ -85,30 +90,30 @@ Respond as a JSON array of skill strings.
         console.error("Error parsing CV:", file.originalname, err);
         results.push({
           filename: file.originalname,
-          skills: userSkills.map(s => ({ skill: s, score: 0 })),
+          skills: userSkills.map(s => ({ skill: capitalizeWords(s), score: 0 })),
           jdMatchScore: 0,
           summary: "Error reading CV"
         });
         continue;
       }
 
-      // GPT prompt for scoring + AI extra skills
+      // GPT prompt for scoring + extra skills
       const prompt = `
 You are a recruitment assistant.
-Job description:
+Job Description:
 "${jdText}"
 Candidate CV:
 "${cvText}"
 Skills to check (case-insensitive): ${userSkills.join(",")}
 Instructions:
-- Score each skill as 1 if mentioned or implied, 0 otherwise.
+- Score each skill as 1 if mentioned/implied, 0 otherwise.
 - Suggest additional relevant skills from CV.
 - Score JD match (0-5).
 - Provide 1-2 sentence professional summary.
 Respond ONLY as JSON:
 {
-  "skills": [{ "skill": "excel", "score": 1 }],
-  "extraSkills": ["tableau","sql"],
+  "skills": [{ "skill": "Excel", "score": 1 }],
+  "extraSkills": ["Tableau","SQL"],
   "jdMatchScore": 4,
   "summary": "Professional summary"
 }
@@ -123,19 +128,19 @@ Respond ONLY as JSON:
         });
         parsed = JSON.parse(response.choices[0].message.content.trim());
 
-        // Normalize skills
+        // Normalize skills: ensure userSkills order, capitalize
         parsed.skills = userSkills.map(skillName => {
           const match = parsed.skills.find(s => s.skill.toLowerCase() === skillName);
-          return { skill: skillName, score: match ? match.score : 0 };
+          return { skill: capitalizeWords(skillName), score: match ? match.score : 0 };
         });
 
-        if (parsed.extraSkills && parsed.extraSkills.length > 0) {
+        if (parsed.extraSkills?.length) {
           extraSkills = Array.from(new Set([...extraSkills, ...parsed.extraSkills.map(s => s.toLowerCase())]));
         }
       } catch (err) {
-        console.warn("GPT invalid JSON fallback:", err);
+        console.warn("GPT JSON fallback:", err);
         parsed = {
-          skills: userSkills.map(s => ({ skill: s, score: 0 })),
+          skills: userSkills.map(s => ({ skill: capitalizeWords(s), score: 0 })),
           extraSkills: [],
           jdMatchScore: 0,
           summary: "Could not generate summary"
@@ -152,10 +157,10 @@ Respond ONLY as JSON:
 
     // Add AI suggested skills to all results
     results.forEach(r => {
-      r.skills = [...r.skills, ...extraSkills.map(s => ({ skill: s, score: 0 }))];
+      r.skills = [...r.skills, ...extraSkills.map(s => ({ skill: capitalizeWords(s), score: 0 }))];
     });
 
-    res.json({ results, allSkills: [...userSkills, ...extraSkills] });
+    res.json({ results, allSkills: [...userSkills.map(s => capitalizeWords(s)), ...extraSkills.map(s => capitalizeWords(s))] });
 
   } catch (err) {
     console.error("Multi-CV scoring error:", err);
