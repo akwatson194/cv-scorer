@@ -6,19 +6,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd;
-  --accent-color: #20c997;
+  --primary-color: #0d6efd;   /* Blue similar to Teamtailor */
+  --accent-color: #228B22;    /* Forest green */
   --bg-light: #f8f9fa;
   --card-bg: #ffffff;
   --text-color: #212529;
   --text-muted: #6c757d;
   --skill-no: #dc3545;
-  --hero-bg: linear-gradient(135deg, #0d6efd 0%, #20c997 100%);
+  --hero-bg: linear-gradient(135deg, #0d6efd 0%, #228B22 100%);
 }
 body {
   font-family: 'Nanum Myeongjo', serif;
-  margin:0;
-  padding:0;
+  margin:0; padding:0;
   background: var(--bg-light);
   color: var(--text-color);
 }
@@ -71,16 +70,26 @@ textarea { min-height:50px; resize:vertical; }
 .progress-fill { height:14px; border-radius:6px; background: var(--accent-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
 .summary { color: var(--text-muted); font-size:14px; line-height:1.4; text-align:left; margin-top:10px; }
+
+section { padding:60px 20px; }
+section h2 { color:var(--primary-color); margin-bottom:20px; font-size:32px; }
+section p, section ul { max-width:700px; margin:auto; font-size:16px; line-height:1.6; }
+section ul { list-style:none; padding:0; }
+section ul li { margin:10px 0; }
+.cta-section { background:var(--accent-color); color:#fff; border-radius:12px; text-align:center; margin:40px 0; padding:60px 20px; }
+.cta-section button { background:#fff; color:var(--accent-color); padding:12px 24px; font-size:16px; font-weight:600; border:none; border-radius:12px; cursor:pointer; }
 </style>
 </head>
 <body>
 
+<!-- Hero -->
 <div class="hero">
   <h1>CV Scorer Dashboard</h1>
   <p>Upload your Job Description and CVs to automatically score candidates and generate a ranked leaderboard.</p>
 </div>
 
-<div class="container">
+<!-- Upload Section -->
+<div class="container" id="uploadSection">
   <label>Job Description (PDF/Word)</label>
   <input type="file" id="jdFile" accept=".pdf,.doc,.docx">
 
@@ -93,12 +102,57 @@ textarea { min-height:50px; resize:vertical; }
   <button id="submitBtn">Score CVs</button>
 </div>
 
+<!-- Leaderboard / Results -->
 <div id="result" class="container"></div>
 
 <div class="container" style="display:flex; justify-content:space-between;">
   <button class="export" id="exportCSV">Export CSV</button>
   <button class="export" id="exportPDF">Export PDF</button>
 </div>
+
+<!-- Why Use This Site -->
+<section style="background:#fff; text-align:center;">
+  <h2>Why Use Our CV Scorer?</h2>
+  <p>Reviewing CVs manually is time-consuming and inconsistent. Our AI-powered CV Scorer automatically evaluates each candidate, ranks them against your job description, and highlights the most relevant skills.</p>
+</section>
+
+<!-- What You'll Get -->
+<section style="background:var(--bg-light); text-align:center;">
+  <h2>What You'll Get</h2>
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:30px;">
+    <div style="flex:1; min-width:200px; background:#fff; padding:20px; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.08);">
+      <h3>Automated Skill Scoring</h3>
+      <p>Score skills from each CV accurately and quickly.</p>
+    </div>
+    <div style="flex:1; min-width:200px; background:#fff; padding:20px; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.08);">
+      <h3>Candidate Ranking</h3>
+      <p>Compare candidates against your job description with a leaderboard view.</p>
+    </div>
+    <div style="flex:1; min-width:200px; background:#fff; padding:20px; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.08);">
+      <h3>Export & Share</h3>
+      <p>Export scores as PDF or CSV to share with your team.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Additional Features -->
+<section style="background:#fff; text-align:center;">
+  <h2>Additional Features</h2>
+  <ul>
+    <li>✅ Upload multiple CVs at once</li>
+    <li>✅ Job description parsing & AI-suggested skills</li>
+    <li>✅ Top 10 skills highlighted per candidate</li>
+    <li>✅ Professional, responsive leaderboard interface</li>
+    <li>✅ Easy-to-read summary for each candidate</li>
+  </ul>
+</section>
+
+<!-- Call To Action -->
+<section class="cta-section">
+  <h2>Start Scoring CVs Instantly</h2>
+  <p>Upload your job description and CVs now to see top candidates ranked automatically.</p>
+  <button id="jumpToUpload">Upload Now</button>
+</section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -215,6 +269,11 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
     doc.text(cv.summary,14,36+skillsTable.length*10+10);
   });
   doc.save("cv_scores.pdf");
+});
+
+// CTA Scroll
+document.getElementById('jumpToUpload').addEventListener('click', ()=>{
+  document.getElementById('uploadSection').scrollIntoView({ behavior:'smooth' });
 });
 </script>
 </body>
