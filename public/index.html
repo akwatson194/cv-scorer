@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>CV Scorer Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd; /* Teamtailor blue */
-  --accent-color: #20c997;  /* green accent */
+  --primary-color: #0d6efd; /* Teamtailor-style blue */
+  --accent-color: #20c997;  /* secondary green accent */
   --bg-light: #f8f9fa;
   --card-bg: #ffffff;
   --text-color: #212529;
@@ -16,7 +15,7 @@
   --skill-no: #dc3545;
 }
 body {
-  font-family: 'Prata', serif;
+  font-family: 'Nanum Myeongjo', serif; /* rounded serif font */
   background: var(--bg-light);
   color: var(--text-color);
   margin:0;
@@ -38,7 +37,7 @@ input, textarea, button {
   width:100%;
   margin-top:5px;
   padding:10px;
-  border-radius:6px;
+  border-radius:12px;
   border:1px solid #ced4da;
   font-size:14px;
 }
@@ -49,6 +48,7 @@ button#submitBtn {
   font-weight:600;
   margin-top:20px;
   border:none;
+  border-radius:12px;
   transition:0.2s;
 }
 button#submitBtn:hover { background: var(--accent-color); }
@@ -61,7 +61,7 @@ button.export {
   margin-top:10px;
   width:48%;
   display:inline-block;
-  border-radius:6px;
+  border-radius:12px;
   cursor:pointer;
   transition:0.2s;
 }
@@ -74,20 +74,20 @@ button.export:hover {
   background: var(--card-bg);
   padding:20px;
   margin:20px auto;
-  border-radius:12px;
+  border-radius:16px;
   box-shadow:0 4px 12px rgba(0,0,0,0.08);
   max-width:800px;
-  text-align:left;
+  text-align:center;
 }
-.flex-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
-.flex-col { flex:1; }
-.skill-chip { display:block; padding:6px 10px; margin:3px 0; border-radius:14px; font-size:13px; color:white; text-align:center; }
+.flex-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
+.flex-col { flex:1; min-width:140px; }
+.skill-chip { display:block; padding:8px 12px; margin:3px 0; border-radius:20px; font-size:13px; color:white; text-align:center; font-weight:500;}
 .skill-yes { background: var(--primary-color); }
 .skill-no { background: var(--skill-no); }
 .progress-bar { height:14px; border-radius:6px; background:#e9ecef; margin-top:6px; }
 .progress-fill { height:14px; border-radius:6px; background: var(--accent-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
-.summary { color: var(--text-muted); font-size:14px; line-height:1.4; text-align:left; }
+.summary { color: var(--text-muted); font-size:14px; line-height:1.4; text-align:left; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -154,7 +154,7 @@ submitBtn.addEventListener("click", async () => {
       card.className = "card";
       let badge = "";
       if(index===0) badge="🏆"; else if(index===1) badge="🥈"; else if(index===2) badge="🥉";
-      card.innerHTML += `<h2 style="text-align:center;">${cv.filename}<span class="badge">${badge}</span></h2>`;
+      card.innerHTML += `<h2>${cv.filename}<span class="badge">${badge}</span></h2>`;
 
       const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
       const topSkills = sortedSkills.slice(0,10);
@@ -167,13 +167,13 @@ submitBtn.addEventListener("click", async () => {
       });
       if(sortedSkills.length>10) rightCol += `<div style="font-size:12px; color:#6c757d; text-align:center;">+${sortedSkills.length-10} more</div>`;
 
-      card.innerHTML += `<div class="flex-row" style="margin-top:15px;">
+      card.innerHTML += `<div class="flex-row">
         <div class="flex-col">${leftCol}${rightCol}</div>
         <div class="flex-col summary">${cv.summary}</div>
       </div>`;
 
       const percent = (cv.jdMatchScore/5)*100;
-      card.innerHTML += `<div style="margin-top:12px; font-weight:600; text-align:center;">Job Description Match: ${cv.jdMatchScore}/5</div>`;
+      card.innerHTML += `<div style="margin-top:12px; font-weight:600;">Job Description Match: ${cv.jdMatchScore}/5</div>`;
       card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
 
       resultDiv.appendChild(card);
@@ -185,7 +185,7 @@ submitBtn.addEventListener("click", async () => {
   }
 });
 
-// CSV & PDF export functions same as before
+// CSV & PDF export
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
