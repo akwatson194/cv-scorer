@@ -6,79 +6,62 @@
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd; /* Teamtailor-style blue */
-  --accent-color: #20c997;  /* secondary green accent */
+  --primary-color: #0d6efd;
+  --accent-color: #20c997;
   --bg-light: #f8f9fa;
   --card-bg: #ffffff;
   --text-color: #212529;
   --text-muted: #6c757d;
   --skill-no: #dc3545;
+  --hero-bg: linear-gradient(135deg, #0d6efd 0%, #20c997 100%);
 }
 body {
-  font-family: 'Nanum Myeongjo', serif; /* rounded serif font */
+  font-family: 'Nanum Myeongjo', serif;
+  margin:0;
+  padding:0;
   background: var(--bg-light);
   color: var(--text-color);
-  margin:0;
-  padding:0 20px;
-  text-align:center;
 }
-h1 {
-  margin:40px 0 20px 0;
-  font-size:36px;
-  font-weight:600;
-  color: var(--primary-color);
-}
-label {
-  font-weight:600;
-  margin-top:15px;
-  display:block;
-}
-input, textarea, button {
-  width:100%;
-  margin-top:5px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid #ced4da;
-  font-size:14px;
-}
-textarea { resize: vertical; min-height:50px; }
-button#submitBtn {
-  background: var(--primary-color);
-  color: #fff;
-  font-weight:600;
-  margin-top:20px;
-  border:none;
-  border-radius:12px;
-  transition:0.2s;
+h1,h2,h3 { margin:0; }
+.container { max-width:900px; margin:auto; padding:20px; text-align:center; }
+button { cursor:pointer; transition:0.3s; }
+button#submitBtn { 
+  background: var(--primary-color); color:#fff; font-weight:600; border:none; border-radius:12px;
+  padding:12px 20px; font-size:16px; margin-top:20px;
 }
 button#submitBtn:hover { background: var(--accent-color); }
-
 button.export {
-  background: var(--card-bg);
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  font-weight:600;
-  margin-top:10px;
-  width:48%;
-  display:inline-block;
+  background: var(--card-bg); border: 2px solid var(--primary-color); color: var(--primary-color);
+  border-radius:12px; padding:10px 16px; font-weight:600; margin-top:10px; width:48%;
+}
+button.export:hover { background: var(--primary-color); color:#fff; }
+
+input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; }
+textarea { min-height:50px; resize:vertical; }
+
+.hero {
+  background: var(--hero-bg);
+  color:#fff;
+  padding:60px 20px;
+  text-align:center;
   border-radius:12px;
-  cursor:pointer;
-  transition:0.2s;
+  margin-bottom:30px;
 }
-button.export:hover {
-  background: var(--primary-color);
-  color: #fff;
-}
+.hero h1 { font-size:48px; margin-bottom:10px; }
+.hero p { font-size:18px; }
 
 .card {
   background: var(--card-bg);
   padding:20px;
   margin:20px auto;
   border-radius:16px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
   max-width:800px;
-  text-align:center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align:left;
 }
+.card:hover { transform:scale(1.02); box-shadow:0 10px 25px rgba(0,0,0,0.15); }
+
 .flex-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
 .flex-col { flex:1; min-width:140px; }
 .skill-chip { display:block; padding:8px 12px; margin:3px 0; border-radius:20px; font-size:13px; color:white; text-align:center; font-weight:500;}
@@ -92,26 +75,29 @@ button.export:hover {
 </head>
 <body>
 
-<h1>CV Scorer Dashboard</h1>
-
-<div style="max-width:600px; margin:auto;">
-<label>Job Description (PDF/Word)</label>
-<input type="file" id="jdFile" accept=".pdf,.doc,.docx">
-
-<label>CVs (PDF/Word, multiple)</label>
-<input type="file" id="cvFiles" accept=".pdf,.doc,.docx" multiple>
-
-<label>Skills (optional)</label>
-<textarea id="skills" placeholder="Excel, SQL, Power BI"></textarea>
-
-<button id="submitBtn">Score CVs</button>
+<div class="hero">
+  <h1>CV Scorer Dashboard</h1>
+  <p>Upload your Job Description and CVs to automatically score candidates and generate a ranked leaderboard.</p>
 </div>
 
-<div id="result"></div>
+<div class="container">
+  <label>Job Description (PDF/Word)</label>
+  <input type="file" id="jdFile" accept=".pdf,.doc,.docx">
 
-<div style="max-width:600px; margin:auto; display:flex; justify-content:space-between;">
-<button class="export" id="exportCSV">Export CSV</button>
-<button class="export" id="exportPDF">Export PDF</button>
+  <label>CVs (PDF/Word, multiple)</label>
+  <input type="file" id="cvFiles" accept=".pdf,.doc,.docx" multiple>
+
+  <label>Skills (optional)</label>
+  <textarea id="skills" placeholder="Excel, SQL, Power BI"></textarea>
+
+  <button id="submitBtn">Score CVs</button>
+</div>
+
+<div id="result" class="container"></div>
+
+<div class="container" style="display:flex; justify-content:space-between;">
+  <button class="export" id="exportCSV">Export CSV</button>
+  <button class="export" id="exportPDF">Export PDF</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -154,7 +140,7 @@ submitBtn.addEventListener("click", async () => {
       card.className = "card";
       let badge = "";
       if(index===0) badge="🏆"; else if(index===1) badge="🥈"; else if(index===2) badge="🥉";
-      card.innerHTML += `<h2>${cv.filename}<span class="badge">${badge}</span></h2>`;
+      card.innerHTML += `<h2 style="text-align:center;">${cv.filename}<span class="badge">${badge}</span></h2>`;
 
       const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
       const topSkills = sortedSkills.slice(0,10);
@@ -173,7 +159,7 @@ submitBtn.addEventListener("click", async () => {
       </div>`;
 
       const percent = (cv.jdMatchScore/5)*100;
-      card.innerHTML += `<div style="margin-top:12px; font-weight:600;">Job Description Match: ${cv.jdMatchScore}/5</div>`;
+      card.innerHTML += `<div style="margin-top:12px; font-weight:600; text-align:center;">Job Description Match: ${cv.jdMatchScore}/5</div>`;
       card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
 
       resultDiv.appendChild(card);
