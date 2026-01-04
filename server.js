@@ -1,3 +1,4 @@
+//* Full Back End for CV Scorer Dashboard
 const express = require("express");
 require("dotenv").config();
 const OpenAI = require("openai").default;
@@ -11,7 +12,7 @@ app.use(express.static("public"));
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Multer for file uploads
+// Multer setup for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -25,7 +26,7 @@ app.post("/upload", upload.fields([
     if (!req.files || !req.files.cvFiles) return res.status(400).json({ error: "No CV files uploaded" });
     if (!req.files.jdFile || req.files.jdFile.length === 0) return res.status(400).json({ error: "No Job Description uploaded" });
 
-    // --- Extract JD text ---
+    // --- Extract Job Description text ---
     const jdFile = req.files.jdFile[0];
     let jdText = "";
     if (jdFile.mimetype === "application/pdf") {
@@ -123,7 +124,7 @@ Respond ONLY as JSON:
         });
         parsed = JSON.parse(response.choices[0].message.content.trim());
 
-        // Normalize skills
+        // Normalize skills to userSkills
         parsed.skills = userSkills.map(skillName => {
           const match = parsed.skills.find(s => s.skill.toLowerCase() === skillName);
           return { skill: skillName, score: match ? match.score : 0, ai: false };
