@@ -1,3 +1,4 @@
+//* Full Front End for CV Scorer Dashboard
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,24 +192,9 @@ submitBtn.addEventListener("click", async () => {
 
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
-    // --- Compute global top skills ---
-    const skillCountMap = {};
-    data.results.forEach(cv => {
-      cv.skills.forEach(s => {
-        const skill = s.skill.toLowerCase();
-        if (!skillCountMap[skill]) skillCountMap[skill] = 0;
-        if (s.score) skillCountMap[skill]++;
-      });
-    });
-    // Always include user skills
-    userSkills.forEach(skill => {
-      if (!skillCountMap[skill]) skillCountMap[skill] = 0;
-    });
-
-    let globalSkills = Object.keys(skillCountMap)
-      .sort((a,b) => skillCountMap[b] - skillCountMap[a])
-      .slice(0,10);
-    while(globalSkills.length < 5) globalSkills.push("-");
+    // --- Compute Global Top Skills ---
+    let globalSkills = data.allSkills.slice(0,10);
+    while(globalSkills.length < 10) globalSkills.push("-");
 
     const sortedResults = data.results.sort((a,b) => b.jdMatchScore - a.jdMatchScore);
     resultDiv.innerHTML = "";
@@ -226,8 +212,8 @@ submitBtn.addEventListener("click", async () => {
         const skillObj = cv.skills.find(s => s.skill.toLowerCase() === skill.toLowerCase());
         let cls = "skill-no";
         if(skillObj?.score) cls = "skill-yes";
-
-        const skillName = capitalizeWords(skill) + ((skillObj?.aiSuggested && !userSkills.includes(skill)) ? " *" : "");
+        else if(skillObj && skillObj.ai) cls = "skill-no"; // AI skill but not present = red
+        const skillName = capitalizeWords(skill);
         if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
         else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
@@ -250,7 +236,7 @@ submitBtn.addEventListener("click", async () => {
   }
 });
 
-// --- CSV & PDF Export ---
+// --- CSV Export ---
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
@@ -274,6 +260,7 @@ document.getElementById("exportCSV").addEventListener("click", ()=>{
   document.body.removeChild(link);
 });
 
+// --- PDF Export ---
 document.getElementById("exportPDF").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const { jsPDF } = window.jspdf;
@@ -300,14 +287,13 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   doc.save("cv_scores.pdf");
 });
 
-// Scroll to upload
+// Scroll to upload section
 document.getElementById('jumpToUpload').addEventListener('click', ()=>{
   document.getElementById('uploadSection').scrollIntoView({ behavior:'smooth' });
 });
 </script>
 </body>
 </html>
-
 
 
 
