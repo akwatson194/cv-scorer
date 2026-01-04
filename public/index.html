@@ -6,8 +6,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #0d6efd;       /* muted blue accents */
-  --accent-color: #228B22;        /* forest green for skills present */
+  --primary-color: #0d6efd;
+  --accent-color: #228B22;  /* forest green */
   --bg-light: #f5f7fa;
   --card-bg: #ffffff;
   --text-color: #212529;
@@ -15,49 +15,24 @@
   --skill-no: #dc3545;
   --hero-gradient: linear-gradient(135deg, #0d6efd, #228B22);
 }
-body {
-  font-family: 'Quicksand', sans-serif;
-  margin:0; padding:0; background: var(--bg-light); color: var(--text-color);
-}
+body { font-family:'Quicksand', sans-serif; margin:0; padding:0; background:var(--bg-light); color:var(--text-color); }
 h1,h2,h3 { margin:0; font-weight:700; }
 p { font-weight:400; }
 .container { max-width:900px; margin:auto; padding:20px; text-align:center; }
 button { cursor:pointer; transition:0.3s; font-family:'Quicksand', sans-serif; }
-button#submitBtn { 
-  background: var(--primary-color); color:#fff; font-weight:700; border:none; border-radius:12px;
-  padding:12px 20px; font-size:16px; margin-top:20px;
-}
+button#submitBtn { background: var(--primary-color); color:#fff; font-weight:700; border:none; border-radius:12px; padding:12px 20px; font-size:16px; margin-top:20px; }
 button#submitBtn:hover { background: var(--accent-color); }
-button.export {
-  background: var(--card-bg); border: 2px solid var(--primary-color); color: var(--primary-color);
-  border-radius:12px; padding:10px 16px; font-weight:700; margin-top:10px; width:48%;
-}
+button.export { background: var(--card-bg); border: 2px solid var(--primary-color); color: var(--primary-color); border-radius:12px; padding:10px 16px; font-weight:700; margin-top:10px; width:48%; }
 button.export:hover { background: var(--primary-color); color:#fff; }
 
-input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; }
+input,textarea { width:100%; padding:10px; border-radius:12px; border:1px solid #ced4da; margin-top:5px; font-size:14px; font-family:'Quicksand', sans-serif; }
 textarea { min-height:50px; resize:vertical; }
 
-.hero {
-  background: var(--hero-gradient);
-  color:#fff;
-  padding:60px 20px;
-  text-align:center;
-  border-radius:12px;
-  margin-bottom:30px;
-}
+.hero { background: var(--hero-gradient); color:#fff; padding:60px 20px; text-align:center; border-radius:12px; margin-bottom:30px; }
 .hero h1 { font-size:48px; margin-bottom:10px; }
 .hero p { font-size:18px; }
 
-.card {
-  background: var(--card-bg);
-  padding:20px;
-  margin:20px auto;
-  border-radius:16px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  max-width:800px;
-  transition: transform 0.3s, box-shadow 0.3s;
-  text-align:left;
-}
+.card { background: var(--card-bg); padding:20px; margin:20px auto; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.08); max-width:800px; transition: transform 0.3s, box-shadow 0.3s; text-align:left; }
 .card:hover { transform:scale(1.02); box-shadow:0 10px 25px rgba(0,0,0,0.15); }
 
 .flex-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:15px; }
@@ -81,13 +56,11 @@ section ul li { margin:10px 0; }
 </head>
 <body>
 
-<!-- Hero -->
 <div class="hero">
   <h1>CV Scorer Dashboard</h1>
   <p>Upload your Job Description and CVs to automatically score candidates and generate a ranked leaderboard.</p>
 </div>
 
-<!-- Upload Section -->
 <div class="container" id="uploadSection">
   <label>Job Description (PDF/Word)</label>
   <input type="file" id="jdFile" accept=".pdf,.doc,.docx">
@@ -101,7 +74,6 @@ section ul li { margin:10px 0; }
   <button id="submitBtn">Score CVs</button>
 </div>
 
-<!-- Leaderboard / Results -->
 <div id="result" class="container"></div>
 
 <div class="container" style="display:flex; justify-content:space-between;">
@@ -109,13 +81,12 @@ section ul li { margin:10px 0; }
   <button class="export" id="exportPDF">Export PDF</button>
 </div>
 
-<!-- Why Use This Site -->
+<!-- Explanatory Sections -->
 <section style="background:#fff; text-align:center;">
   <h2>Why Use Our CV Scorer?</h2>
   <p>Reviewing CVs manually is time-consuming and inconsistent. Our AI-powered CV Scorer automatically evaluates each candidate, ranks them against your job description, and highlights the most relevant skills.</p>
 </section>
 
-<!-- What You'll Get -->
 <section style="background:var(--bg-light); text-align:center;">
   <h2>What You'll Get</h2>
   <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:30px;">
@@ -134,7 +105,6 @@ section ul li { margin:10px 0; }
   </div>
 </section>
 
-<!-- Additional Features -->
 <section style="background:#fff; text-align:center;">
   <h2>Additional Features</h2>
   <ul>
@@ -146,7 +116,6 @@ section ul li { margin:10px 0; }
   </ul>
 </section>
 
-<!-- Call To Action -->
 <section class="cta-section">
   <h2>Start Scoring CVs Instantly</h2>
   <p>Upload your job description and CVs now to see top candidates ranked automatically.</p>
@@ -160,8 +129,7 @@ const submitBtn = document.getElementById("submitBtn");
 const resultDiv = document.getElementById("result");
 let lastResults = null;
 
-// Capitalize each word
-const capitalizeWords = (str) => str.replace(/\b\w/g, c => c.toUpperCase());
+function capitalizeWords(str){ return str.replace(/\b\w/g, c=>c.toUpperCase()); }
 
 submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
@@ -197,12 +165,13 @@ submitBtn.addEventListener("click", async () => {
       card.innerHTML += `<h2 style="text-align:center;">${cv.filename}<span class="badge">${badge}</span></h2>`;
 
       // Ensure 5-10 skills
-      let sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
-      while(sortedSkills.length < 5) sortedSkills.push({skill:"-", score:0});
-      if(sortedSkills.length > 10) sortedSkills = sortedSkills.slice(0,10);
+      const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
+      while(sortedSkills.length<5) sortedSkills.push({skill:"-", score:0});
+      if(sortedSkills.length>10) sortedSkills.length=10;
+      const topSkills = sortedSkills;
 
       let leftCol="", rightCol="";
-      sortedSkills.forEach((skill,i)=>{
+      topSkills.forEach((skill,i)=>{
         const cls = skill.score ? "skill-yes":"skill-no";
         const skillName = capitalizeWords(skill.skill);
         if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
@@ -227,7 +196,7 @@ submitBtn.addEventListener("click", async () => {
   }
 });
 
-// CSV & PDF export (unchanged)
+// CSV Export
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
@@ -236,7 +205,7 @@ document.getElementById("exportCSV").addEventListener("click", ()=>{
   lastResults.results.forEach(cv=>{
     const row=[cv.filename,cv.jdMatchScore];
     lastResults.allSkills.forEach(skill=>{
-      const sObj=cv.skills.find(s=>s.skill.toLowerCase()===skill.toLowerCase());
+      const sObj=cv.skills.find(s=>s.skill===skill);
       row.push(sObj?.score?"1":"0");
     });
     row.push(`"${cv.summary}"`);
@@ -251,6 +220,7 @@ document.getElementById("exportCSV").addEventListener("click", ()=>{
   document.body.removeChild(link);
 });
 
+// PDF Export
 document.getElementById("exportPDF").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const { jsPDF } = window.jspdf;
@@ -258,12 +228,13 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   const sortedResults = lastResults.results.sort((a,b)=>b.jdMatchScore - a.jdMatchScore);
   sortedResults.forEach((cv,i)=>{
     if(i>0) doc.addPage();
-    doc.setFontSize(16); doc.setFont("Quicksand");
+    doc.setFontSize(16);
+    doc.setFont("Quicksand");
     doc.text(cv.filename,14,20);
     doc.setFontSize(12);
     doc.text(`Job Description Match: ${cv.jdMatchScore}/5`,14,28);
     const skillsTable = lastResults.allSkills.map(skill=>{
-      const sObj=cv.skills.find(s=>s.skill.toLowerCase()===skill.toLowerCase());
+      const sObj=cv.skills.find(s=>s.skill===skill);
       return [capitalizeWords(skill), sObj?.score?"✅":"❌"];
     });
     doc.autoTable({ startY:36, head:[["Skill","Match"]], body:skillsTable, theme:'grid' });
@@ -273,13 +244,15 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
   doc.save("cv_scores.pdf");
 });
 
-// Scroll to upload
+// CTA Scroll
 document.getElementById('jumpToUpload').addEventListener('click', ()=>{
   document.getElementById('uploadSection').scrollIntoView({ behavior:'smooth' });
 });
 </script>
 </body>
 </html>
+
+
 
 
 
