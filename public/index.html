@@ -6,16 +6,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary-color: #228B22; /* Forest Green */
-  --bg-color: #000000;
-  --card-bg: #1a1a1a;
-  --text-color: #f9f9f9;
-  --text-muted: #a1a1a1;
-  --skill-no: #ef4444;
+  --primary-color: #0d6efd; /* Teamtailor-style blue accent */
+  --accent-color: #20c997; /* secondary accent green */
+  --bg-light: #f8f9fa;
+  --card-bg: #ffffff;
+  --text-color: #212529;
+  --text-muted: #6c757d;
+  --skill-no: #dc3545;
 }
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--bg-color);
+  background: var(--bg-light);
   color: var(--text-color);
   margin:0;
   padding:0 20px;
@@ -37,18 +38,22 @@ input, textarea, button {
   margin-top:5px;
   padding:10px;
   border-radius:6px;
-  border:none;
+  border:1px solid #ced4da;
   font-size:14px;
 }
 textarea { resize: vertical; min-height:50px; }
 button#submitBtn {
   background: var(--primary-color);
-  color: var(--text-color);
+  color: #fff;
   font-weight:600;
   margin-top:20px;
+  border:none;
+  transition:0.2s;
 }
+button#submitBtn:hover { background: var(--accent-color); }
+
 button.export {
-  background: transparent;
+  background: var(--card-bg);
   border: 2px solid var(--primary-color);
   color: var(--primary-color);
   font-weight:600;
@@ -57,25 +62,27 @@ button.export {
   display:inline-block;
   border-radius:6px;
   cursor:pointer;
+  transition:0.2s;
 }
 button.export:hover {
   background: var(--primary-color);
-  color: var(--text-color);
+  color: #fff;
 }
+
 .card {
   background: var(--card-bg);
   padding:20px;
   margin:20px 0;
   border-radius:12px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 .flex-row { display:flex; gap:20px; flex-wrap:wrap; }
 .flex-col { flex:1; }
 .skill-chip { display:block; padding:6px 10px; margin:3px 0; border-radius:14px; font-size:13px; color:white; }
 .skill-yes { background: var(--primary-color); }
 .skill-no { background: var(--skill-no); }
-.progress-bar { height:14px; border-radius:6px; background:#333; margin-top:6px; }
-.progress-fill { height:14px; border-radius:6px; background: var(--primary-color); transition: width 0.4s; }
+.progress-bar { height:14px; border-radius:6px; background:#e9ecef; margin-top:6px; }
+.progress-fill { height:14px; border-radius:6px; background: var(--accent-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
 .summary { color: var(--text-muted); font-size:14px; line-height:1.4; }
 </style>
@@ -84,6 +91,7 @@ button.export:hover {
 
 <h1>CV Scorer Dashboard</h1>
 
+<div style="max-width:600px; margin:auto;">
 <label>Job Description (PDF/Word)</label>
 <input type="file" id="jdFile" accept=".pdf,.doc,.docx">
 
@@ -94,11 +102,14 @@ button.export:hover {
 <textarea id="skills" placeholder="Excel, SQL, Power BI"></textarea>
 
 <button id="submitBtn">Score CVs</button>
+</div>
 
 <div id="result"></div>
 
+<div style="max-width:600px; margin:auto; display:flex; justify-content:space-between;">
 <button class="export" id="exportCSV">Export CSV</button>
 <button class="export" id="exportPDF">Export PDF</button>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -107,9 +118,7 @@ const submitBtn = document.getElementById("submitBtn");
 const resultDiv = document.getElementById("result");
 let lastResults = null;
 
-function capitalizeWords(str){
-  return str.replace(/\b\w/g, c=>c.toUpperCase());
-}
+function capitalizeWords(str){ return str.replace(/\b\w/g, c=>c.toUpperCase()); }
 
 submitBtn.addEventListener("click", async () => {
   const jdInput = document.getElementById("jdFile");
@@ -135,16 +144,13 @@ submitBtn.addEventListener("click", async () => {
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
     const sortedResults = data.results.sort((a,b) => b.jdMatchScore - a.jdMatchScore);
-
     resultDiv.innerHTML = "";
+
     sortedResults.forEach((cv,index)=>{
       const card = document.createElement("div");
       card.className = "card";
-
       let badge = "";
-      if(index===0) badge="🏆";
-      else if(index===1) badge="🥈";
-      else if(index===2) badge="🥉";
+      if(index===0) badge="🏆"; else if(index===1) badge="🥈"; else if(index===2) badge="🥉";
       card.innerHTML += `<h2>${cv.filename}<span class="badge">${badge}</span></h2>`;
 
       const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
@@ -156,16 +162,9 @@ submitBtn.addEventListener("click", async () => {
         if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
         else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
-      if(sortedSkills.length>10){
-        rightCol += `<div style="font-size:12px; color:#888">+${sortedSkills.length-10} more</div>`;
-      }
+      if(sortedSkills.length>10) rightCol += `<div style="font-size:12px; color:#6c757d">+${sortedSkills.length-10} more</div>`;
 
-      card.innerHTML += `
-      <div class="flex-row" style="margin-top:15px;">
-        <div class="flex-col">${leftCol}${rightCol}</div>
-        <div class="flex-col summary">${cv.summary}</div>
-      </div>
-      `;
+      card.innerHTML += `<div class="flex-row" style="margin-top:15px;"><div class="flex-col">${leftCol}${rightCol}</div><div class="flex-col summary">${cv.summary}</div></div>`;
 
       const percent = (cv.jdMatchScore/5)*100;
       card.innerHTML += `<div style="margin-top:12px; font-weight:600;">Job Description Match: ${cv.jdMatchScore}/5</div>`;
@@ -180,7 +179,7 @@ submitBtn.addEventListener("click", async () => {
   }
 });
 
-// CSV & PDF export remain same as previous code
+// CSV & PDF export functions same as before
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
@@ -228,4 +227,6 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
 </script>
 </body>
 </html>
+
+
 
