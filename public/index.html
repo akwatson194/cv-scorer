@@ -2,70 +2,87 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CV Scorer Professional</title>
+<title>CV Scorer Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
+:root {
+  --primary-color: #228B22; /* Forest Green */
+  --bg-color: #000000;
+  --card-bg: #1a1a1a;
+  --text-color: #f9f9f9;
+  --text-muted: #a1a1a1;
+  --skill-no: #ef4444;
+}
 body {
   font-family: 'Inter', sans-serif;
-  max-width: 1000px;
-  margin: 40px auto;
-  background: #f4f5f7;
-  color: #111827;
+  background: var(--bg-color);
+  color: var(--text-color);
+  margin:0;
+  padding:0 20px;
 }
 h1 {
-  text-align: center;
-  color: #1f2937;
-  margin-bottom: 30px;
+  text-align:center;
+  margin:40px 0 20px 0;
+  font-size:36px;
+  font-weight:600;
+  color: var(--primary-color);
 }
 label {
-  font-weight: 600;
-  margin-top: 15px;
+  font-weight:600;
+  margin-top:15px;
+  display:block;
 }
 input, textarea, button {
-  width: 100%;
-  margin-top: 5px;
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
+  width:100%;
+  margin-top:5px;
+  padding:10px;
+  border-radius:6px;
+  border:none;
+  font-size:14px;
 }
-button {
-  cursor: pointer;
-  font-weight: 600;
-}
+textarea { resize: vertical; min-height:50px; }
 button#submitBtn {
-  background: #2563eb;
-  color: white;
-  margin-top: 20px;
+  background: var(--primary-color);
+  color: var(--text-color);
+  font-weight:600;
+  margin-top:20px;
 }
 button.export {
-  background: #10b981;
-  color: white;
-  margin-top: 10px;
-  width: 48%;
-  display: inline-block;
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  font-weight:600;
+  margin-top:10px;
+  width:48%;
+  display:inline-block;
+  border-radius:6px;
+  cursor:pointer;
+}
+button.export:hover {
+  background: var(--primary-color);
+  color: var(--text-color);
 }
 .card {
-  background:white;
+  background: var(--card-bg);
   padding:20px;
   margin:20px 0;
   border-radius:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
 }
 .flex-row { display:flex; gap:20px; flex-wrap:wrap; }
 .flex-col { flex:1; }
 .skill-chip { display:block; padding:6px 10px; margin:3px 0; border-radius:14px; font-size:13px; color:white; }
-.skill-yes { background:#10b981; }
-.skill-no { background:#ef4444; }
-.progress-bar { height:14px; border-radius:6px; background:#e5e7eb; margin-top:6px; }
-.progress-fill { height:14px; border-radius:6px; background:#2563eb; transition: width 0.4s; }
+.skill-yes { background: var(--primary-color); }
+.skill-no { background: var(--skill-no); }
+.progress-bar { height:14px; border-radius:6px; background:#333; margin-top:6px; }
+.progress-fill { height:14px; border-radius:6px; background: var(--primary-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
-.summary { color:#6b7280; font-size:14px; line-height:1.4; }
+.summary { color: var(--text-muted); font-size:14px; line-height:1.4; }
 </style>
 </head>
 <body>
 
-<h1>CV Scorer Professional</h1>
+<h1>CV Scorer Dashboard</h1>
 
 <label>Job Description (PDF/Word)</label>
 <input type="file" id="jdFile" accept=".pdf,.doc,.docx">
@@ -117,7 +134,6 @@ submitBtn.addEventListener("click", async () => {
 
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
-    // Sort candidates by Job Description match descending
     const sortedResults = data.results.sort((a,b) => b.jdMatchScore - a.jdMatchScore);
 
     resultDiv.innerHTML = "";
@@ -125,14 +141,12 @@ submitBtn.addEventListener("click", async () => {
       const card = document.createElement("div");
       card.className = "card";
 
-      // Candidate Name + badge
       let badge = "";
       if(index===0) badge="🏆";
       else if(index===1) badge="🥈";
       else if(index===2) badge="🥉";
       card.innerHTML += `<h2>${cv.filename}<span class="badge">${badge}</span></h2>`;
 
-      // Top 10 skills 2 columns
       const sortedSkills = cv.skills.sort((a,b)=>b.score - a.score);
       const topSkills = sortedSkills.slice(0,10);
       let leftCol="", rightCol="";
@@ -143,10 +157,9 @@ submitBtn.addEventListener("click", async () => {
         else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
       if(sortedSkills.length>10){
-        rightCol += `<div style="font-size:12px; color:#6b7280">+${sortedSkills.length-10} more</div>`;
+        rightCol += `<div style="font-size:12px; color:#888">+${sortedSkills.length-10} more</div>`;
       }
 
-      // Two-column layout: Skills left, Summary right
       card.innerHTML += `
       <div class="flex-row" style="margin-top:15px;">
         <div class="flex-col">${leftCol}${rightCol}</div>
@@ -154,7 +167,6 @@ submitBtn.addEventListener("click", async () => {
       </div>
       `;
 
-      // Job Description Match
       const percent = (cv.jdMatchScore/5)*100;
       card.innerHTML += `<div style="margin-top:12px; font-weight:600;">Job Description Match: ${cv.jdMatchScore}/5</div>`;
       card.innerHTML += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
@@ -168,7 +180,7 @@ submitBtn.addEventListener("click", async () => {
   }
 });
 
-// CSV export
+// CSV & PDF export remain same as previous code
 document.getElementById("exportCSV").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const rows=[];
@@ -192,41 +204,28 @@ document.getElementById("exportCSV").addEventListener("click", ()=>{
   document.body.removeChild(link);
 });
 
-// PDF export
 document.getElementById("exportPDF").addEventListener("click", ()=>{
   if(!lastResults) return alert("No results");
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
   const sortedResults = lastResults.results.sort((a,b)=>b.jdMatchScore - a.jdMatchScore);
-
   sortedResults.forEach((cv,i)=>{
     if(i>0) doc.addPage();
     doc.setFontSize(16);
     doc.text(cv.filename,14,20);
     doc.setFontSize(12);
     doc.text(`Job Description Match: ${cv.jdMatchScore}/5`,14,28);
-
     const skillsTable = lastResults.allSkills.map(skill=>{
       const sObj=cv.skills.find(s=>s.skill===skill);
       return [capitalizeWords(skill), sObj?.score?"✅":"❌"];
     });
-
-    doc.autoTable({
-      startY:36,
-      head:[["Skill","Match"]],
-      body:skillsTable,
-      theme:'grid'
-    });
-
+    doc.autoTable({ startY:36, head:[["Skill","Match"]], body:skillsTable, theme:'grid' });
     doc.text("Summary:",14,36+skillsTable.length*10+4);
     doc.text(cv.summary,14,36+skillsTable.length*10+10);
   });
-
   doc.save("cv_scores.pdf");
 });
 </script>
 </body>
 </html>
-
 
