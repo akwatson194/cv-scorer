@@ -9,7 +9,6 @@
   --primary-color: #0d6efd;       /* muted blue accents */
   --accent-color: #228B22;        /* forest green for skills present */
   --skill-no: #dc3545;             /* red for missing skills */
-  --skill-ai: #0d6efd;             /* blue for AI suggested only */
   --bg-light: #f5f7fa;
   --card-bg: #ffffff;
   --text-color: #212529;
@@ -72,7 +71,6 @@ textarea { min-height:50px; resize:vertical; }
 .skill-chip { display:block; padding:8px 12px; margin:3px 0; border-radius:20px; font-size:13px; text-align:center; font-weight:500;}
 .skill-yes { background: var(--accent-color); color:#fff; }
 .skill-no { background: var(--skill-no); color:#fff; }
-.skill-ai { background: var(--skill-ai); color:#fff; }
 .progress-bar { height:14px; border-radius:6px; background:#e9ecef; margin-top:6px; }
 .progress-fill { height:14px; border-radius:6px; background: var(--accent-color); transition: width 0.4s; }
 .badge { font-size:18px; margin-left:5px; }
@@ -193,7 +191,7 @@ submitBtn.addEventListener("click", async () => {
 
     if (!data.results) { resultDiv.innerHTML="<p>No results returned</p>"; return; }
 
-    // --- Compute Global Top Skills ---
+    // --- Compute global top skills ---
     const skillCountMap = {};
     data.results.forEach(cv => {
       cv.skills.forEach(s => {
@@ -202,8 +200,7 @@ submitBtn.addEventListener("click", async () => {
         if (s.score) skillCountMap[skill]++;
       });
     });
-
-    // Include userSkills to always appear
+    // Always include user skills
     userSkills.forEach(skill => {
       if (!skillCountMap[skill]) skillCountMap[skill] = 0;
     });
@@ -229,9 +226,8 @@ submitBtn.addEventListener("click", async () => {
         const skillObj = cv.skills.find(s => s.skill.toLowerCase() === skill.toLowerCase());
         let cls = "skill-no";
         if(skillObj?.score) cls = "skill-yes";
-        else if(!userSkills.includes(skill.toLowerCase()) && skill !== "-") cls = "skill-ai";
 
-        const skillName = capitalizeWords(skill);
+        const skillName = capitalizeWords(skill) + ((skillObj?.aiSuggested && !userSkills.includes(skill)) ? " *" : "");
         if(i<5) leftCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
         else rightCol += `<div class="skill-chip ${cls}">${skillName}</div>`;
       });
@@ -292,9 +288,8 @@ document.getElementById("exportPDF").addEventListener("click", ()=>{
 
     const skillsTable = lastResults.allSkills.map(skill=>{
       const sObj = cv.skills.find(s => s.skill.toLowerCase()===skill.toLowerCase());
-      let symbol = "❌", color = [255,0,0];
-      if(sObj?.score){ symbol="✅"; color=[34,139,34]; } // green
-      else if(!lastResults.allSkills.slice(0,5).includes(skill.toLowerCase())) { symbol="⚪"; color=[13,110,253]; } // blue
+      let symbol = "❌";
+      if(sObj?.score) symbol="✅";
       return [capitalizeWords(skill), symbol];
     });
 
@@ -312,6 +307,7 @@ document.getElementById('jumpToUpload').addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
